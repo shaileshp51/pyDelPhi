@@ -859,10 +859,16 @@ def run_and_compare_all_combinations(
     combinations: List[Tuple[str, str, int]],
     timeout: int,
     verbose: bool,
-) -> List[dict]:
+) -> Tuple[List[dict], str]:
     """
     For a single case: run the reference core (if present) then run all other combinations.
-    Returns the list of report rows for this case.
+
+    Returns
+    -------
+    case_reports : list of dict
+        Report rows for this case.
+    case_status : str
+        Aggregated status (PASS, FAIL, SKIPPED, etc.)
     """
     case_reports: List[dict] = []
     start_all_combinations_time = time.time()
@@ -887,7 +893,7 @@ def run_and_compare_all_combinations(
                     skip_reason,
                 )
             )
-        return case_reports
+        return case_reports, "SKIPPED"
 
     is_nonlinear = case_data.get("is_non_linear")
     is_nonlinear = str(is_nonlinear).lower() if is_nonlinear else "false"
