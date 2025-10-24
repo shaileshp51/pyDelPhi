@@ -387,7 +387,7 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 
 If you use pyDelPhi in your work, please cite:
 
-> **Pandey, S. et al. (2025)**  
+> **Pandey, S. K. et al. (2025)**  
 > *pyDelPhi: A Python/Numba Implementation of the DelPhi Poisson–Boltzmann Solver with GPU Acceleration and Extended Modeling Features*  
 > *(manuscript in preparation)*
 
