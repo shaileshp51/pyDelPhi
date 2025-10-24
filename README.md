@@ -7,8 +7,7 @@
 
 ---
 
-**pyDelPhi** is a high-performance, Python/Numba/CUDA reimplementation of the classic **DelPhi** Poisson–Boltzmann (PB) electrostatics solver.  
-It enables accurate, reproducible computation of **electrostatic potentials** and **polar solvation free energies** for biomolecules, with efficient execution on both **CPU** and **GPU** platforms.
+**pyDelPhi** is a high-performance, Python/Numba/CUDA reimplementation of the classic **DelPhi** Poisson–Boltzmann (PB) electrostatics solver. It enables accurate, reproducible computation of **electrostatic potentials** and **polar solvation free energies** for biomolecules, with efficient execution on both **CPU** and **GPU** platforms.
 
 ---
 
