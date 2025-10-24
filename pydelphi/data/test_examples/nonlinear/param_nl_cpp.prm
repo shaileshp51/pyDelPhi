@@ -1,0 +1,32 @@
+solver=sor 
+gsize=117
+scale=2.0
+!perfil=70.0
+in(pdb,file="./1brs.pdb")
+in(siz,file="./amber.siz")
+in(crg,file="./amber.crg")
+
+indi=1.0
+exdi=80.0
+prbrad=1.4
+
+!gaussian=1
+!gm=1
+sigma=1.0
+srfcut=20.0
+
+salt=0.15 !0.1
+
+!relpar=1.0
+bndcon=4 ! coulombic
+maxc=0.00001
+
+linit=800
+nonit=100
+
+
+out(phi,file="./phimap_nl_cpp.cube", format=cube)
+out(deb,file="./ion_exclusion_nl_cpp.cube", format=cube)
+
+energy(s,c,g)
+

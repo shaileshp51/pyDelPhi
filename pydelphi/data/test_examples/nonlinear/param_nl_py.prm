@@ -1,0 +1,43 @@
+solver=nwt
+biomodel=pbe                                                                                                                                                                             
+surfacemethod=vdw ! gaussiancutoff !vdw
+dielectricmodel=twodielectric ! vdw ! twodielectric ! gaussian
+surfaceoffset=0.0
+sigma=1.0
+gaussian_exponent=1
+surface_cutoff=20.0
+
+
+scale=2.0
+!percentfill=70
+gridbox_type=cubic
+gsize=117
+
+in(pdb,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/1brs.pdb")
+in(siz,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/amber.siz")
+in(crg,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/amber.crg")
+
+indi=1.0
+exdi=80.0
+prbrad=1.4
+salt=0.15    !01 ! 0.15
+
+bndcon=coulombic ! dipolar ! coulombic ! dipolar !2
+
+iteration_block_size=50
+!max_rmsd=0.0001
+max_delta_phi=0.0001
+linit=8000
+
+max_nonlinear_iteration=2000
+! max_nonlinear_coupling_delta_phi=0.1
+nonlinear_coupling_steps=20
+! nlrelpar=1.0 ! relaxation parameter
+
+out(phi,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/phimap_nl_py.cube", format=cube)
+out(surf,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/ion_exclusion_nl_py.cube", format=cube)
+out(density,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/gaussdensity_nl_py.cube", point="both", format=cube)
+out(eps,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/nonlinear/epsilon_nl_py.cube", point="both", media="both", format=cube)
+
+energy(p,c,g)
+

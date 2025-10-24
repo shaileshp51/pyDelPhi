@@ -1,0 +1,136 @@
+# ===============================
+# pyDelPhi .gitignore
+# ===============================
+
+# ---- Output / data files ----
+*.npy
+*.npz
+*.out
+*.csv
+*.tsv
+*.png
+*.pdf
+*.dat
+*.txt
+*.cube
+*.phi
+*.phi32
+*.phi64
+*.log
+*.xml
+*.json
+# *.prm  # Uncomment if you want to exclude parameter files
+
+# ---- Build & packaging ----
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ---- Bytecode & compiled ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ---- Poetry / environments ----
+.venv/
+.env/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+# Optional lock files (uncomment if you prefer to ignore)
+# poetry.lock
+# Pipfile.lock
+
+# ---- Test & coverage ----
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# ---- Documentation & Sphinx ----
+docs/_build/
+site/
+
+# ---- Editor & IDE files ----
+.vscode/
+.idea/
+.spyderproject
+.spyproject
+.ropeproject
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ---- Jupyter / IPython ----
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# ---- Static analysis & type checkers ----
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# ---- Temporary / generated ----
+*.tmp
+*.bak
+*.old
+*.prof
+*.trace
+*.dat~
+*.tsv~
+*.csv~
+*.pdf~
+*.png~
+*.DS_Store
+Thumbs.db
+
+# ---- PyDelPhi specific ----
+# HPC / profiling & runtime logs
+memory_profiles/
+runtime_logs/
+
+# Generated test results and data analysis outputs
+tsv-reports/
+plots/
+benchmarks/
+
+# ---- PyBuilder / mkdocs ----
+.pybuilder/
+target/
+
+# ---- Local configs ----
+local_settings.py
+db.sqlite3*
+

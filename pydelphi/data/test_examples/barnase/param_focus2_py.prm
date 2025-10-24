@@ -1,0 +1,29 @@
+scale=4.0
+gsize=65
+
+in(pdb,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/barnase.pdb")
+in(crg,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/amber.crg")
+in(siz,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/amber.siz")
+
+in(phi,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/phimap_py1.cube",format=cube)
+
+acent(29.3265,39.6727,8.45517)
+! acenter(22.7240,    42.1479,     8.9680)
+
+in(frc,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/barstar-ASP39.pdb")
+out(frc,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/frc_pydelphi.out")
+
+out(phi,file="/home/skp/Documents/GitHub/pydelphi_typed_dev/examples/barnase/phimap_focus_py.cube", media="water", format=cube)
+
+site(a,q,p,f)
+!site(a,q,p)
+
+indi=1.0
+exdi=80.0
+salt=0.15
+
+prbrad=1.4
+bndcon=focusing !3      ! focusing
+maxc=0.0001
+
+!verbosity=DEBUG

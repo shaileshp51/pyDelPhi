@@ -1,0 +1,14 @@
+DELPHI SITE POTENTIAL FILE
+grid size, percent fill:   [161 161 161]    8.750
+outer diel. and first one assigned :   80.00    2.00
+ionic strength (M):   0.0
+ion excl., probe radii:   2.0    1.4    1.4
+linear, nolinear iterations:   5000    0
+boundary condition:   DelphiBoundaryCondition.COULOMBIC
+Data Output:   ATOM CHARGE POTENTIALS FIELDS                                    
+title: frc map
+
+
+ATOM DESCRIPTOR     CHARGE    GRID PT.  GRID FIELDS: (Ex, Ey, Ez)               
+N3   GLN  D 10      0.0000   37.9543   -6.7234   -1.0029   -0.0000
+Total energy = 0.0000 kT

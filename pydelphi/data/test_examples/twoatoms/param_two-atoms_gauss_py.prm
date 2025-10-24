@@ -1,0 +1,38 @@
+biomodel=pbe    
+
+surfacemethod=gaussiancutoff ! gaussiancutoff
+dielectricmodel=gaussian ! twodielectric
+
+surfaceoffset=0.0
+density_cutoff=0.759
+surface_cutoff=20
+
+gaussianmultiplier=1
+sigma=1.0
+
+grid_size=25 
+solute_extrema=COORDINATE
+scale=2.0
+! percentfill=60
+gridbox_type=cubic
+
+in(modpdb4,file="/home/skp/Documents/GitHub/pydelphi_devopt/example_twoatoms/two-atoms.pqr", format="pqr")                                                                
+
+indi=1.0
+gapdi=80.0
+exdi=80.0
+boundary_condition=coulombic
+
+salt=0.0
+
+max_rmsd=5.0e-5
+!max_delta_phi=1.0e-6
+
+zeta_potential=OFF
+! zeta_distance=3
+out(zphi,file="./sphere_surface.zeta")
+
+out(density, file="/home/skp/Documents/GitHub/pydelphi_devopt/example_twoatoms/densitymap.cube", format="cube")
+out(surf, file="/home/skp/Documents/GitHub/pydelphi_devopt/example_twoatoms/surfmap.cube", format="cube")
+out(eps, file="/home/skp/Documents/GitHub/pydelphi_devopt/example_twoatoms/epsmap.cube", phase="both", point="both", format="cube")
+out(phi, file="/home/skp/Documents/GitHub/pydelphi_devopt/example_twoatoms/phimap.cube", media="both", format="cube")

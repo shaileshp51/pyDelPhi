@@ -1,0 +1,36 @@
+Metadata-Version: 2.4
+Name: pydelphi
+Version: 0.0.3.dev20250921
+Summary: A Poisson-Boltzmann Equation solver for calculating non-polar solvation free energy.
+License: AGPL-3.0-or-later
+License-File: LICENSE
+Author: Shailesh Kumar Panday
+Author-email: shaileshp51@gmail.com
+Requires-Python: >=3.12,<3.13
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.12
+Requires-Dist: cython (>=3.0.11,<4.0.0)
+Requires-Dist: numba (>=0.61.0,<0.62.0)
+Requires-Dist: numpy (>=1.26.0,<2.0.0)
+Description-Content-Type: text/markdown
+
+# pydelphi disttibution build
+#### Update the version tag to current date
+poetry run bump-version
+
+#### Build source distribution of pydelphi
+poetry build -f sdist
+
+
+#### Install the source distribution
+##### untar the pydelphi-source-distribution
+##### change directory to pydelphi-source-distribution
+pip install -e .
+
+
+## License
+
+PyDelphi is licensed under the GNU Affero General Public License version 3 or later (AGPLv3+).  
+You can find the full license in the `LICENSE` file.
+
