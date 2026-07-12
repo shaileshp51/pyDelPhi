@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pydelphi"
 # DEV NOTE: keep this synchronized with pydelphi/__init__.py.
-version = "0.2.1.dev260709"
+version = "0.3.0"
 description = "pyDelPhi — a Python/Numba/CUDA implementation of the DelPhi Poisson–Boltzmann solver for biomolecular electrostatics and solvation energy calculations."
 authors = [
   "Shailesh Kumar Panday <shaileshp51@gmail.com>"

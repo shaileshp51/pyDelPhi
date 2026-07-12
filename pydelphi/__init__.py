@@ -26,7 +26,7 @@ __author__ = "Shailesh Kumar Panday"
 __copyright__ = "Copyright 2025, The pyDelPhi Project"
 __credits__ = ["Emil Alexov (Scientific Guidance and Validation)"]
 __license__ = "AGPL-3.0-or-later"
-__version__ = "0.2.1.dev260709"
+__version__ = "0.3.0"
 
 __maintainers__ = ["pyDelPhi Development Team"]
 __contact__ = "https://github.com/shaileshp51/pyDelPhi/issues"
