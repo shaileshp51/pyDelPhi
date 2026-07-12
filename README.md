@@ -14,38 +14,47 @@
 ## ✨ Key Features
 
 - **Physics-Faithful Reimplementation**
+  
   - Fully compatible with DelPhi 8.5 reference outputs.
   - Validated across protein, nucleic-acid, and viral capsid benchmarks.
 
 - **High-Performance Backends**
+  
   - CPU parallelization via `Numba` and `prange`.
   - GPU acceleration through custom CUDA kernels optimized for A100-class devices.
 
 - **Model Support**
+  
   - Linear and nonlinear PB formulations.
   - Traditional two-dielectric and Gaussian dielectric models.
   - Cubic and cuboidal grid geometries with automatic padding control.
 
 - **Precision and Solvers**
+  
   - Single / double precision arithmetic.
   - Successive Over-Relaxation (SOR) and Newton-like (NWT) iterative solvers.
 
 - **Modular and Extensible Architecture**
-  - Designed for scientific transparency, benchmarking, and reproducibility.
   
+  - Designed for scientific transparency, benchmarking, and reproducibility.
+
 ---
 
 ## ⚙️ Installation
 
 ### Requirements
+
 - Python >= 3.13,<3.14
 - NumPy >= 2.3.5,<2.4
 - Numba >= 0.62.1,<0.63
-- CUDA Toolkit >= 12.0 and an NVIDIA GPU/driver (optional for GPU backend)
+- CUDA Toolkit >= 12.0 and an NVIDIA GPU/driver (optional for GPU execution)
 
-NetCDF trajectory support uses `netCDF4`. To avoid native-library and ABI conflicts, both `netCDF4` and the optional `numba-cuda` backend are managed through Conda in the supplied environment files.
+`numba-cuda` is installed by the supplied Conda environments, but CUDA hardware is not required for CPU execution. CPU mode must remain usable when CUDA is absent, disabled, or misconfigured.
+
+NetCDF support is optional and is needed only for NetCDF trajectory input. The tested `netCDF4` version is installed through Conda to keep its NetCDF-C, HDF5, and related native libraries consistent.
 
 Optional (profiling / plots):
+
 ```bash
 scipy
 pandas
@@ -56,36 +65,57 @@ psutil
 
 ## 🧩 Recommended Environment Setup
 
-A dedicated Conda or Miniconda environment is **strongly recommended**. The source distribution includes environment files for CPU/NetCDF and CUDA installations.
+A dedicated Conda or Miniconda environment is **strongly recommended**. The source distribution includes two environment definitions:
 
-### CPU and NetCDF
+- `environment.yml` — base pyDelPhi environment for static calculations and non-NetCDF trajectory formats.
+- `environment-traj.yml` — trajectory environment with the tested Conda-managed `netCDF4=1.7.3` package.
+
+Both environments include `numba-cuda`. This does not require a GPU to be present and does not make CUDA mandatory at runtime. Select `-P cpu` for CPU execution; select `-P cuda` only on a system with a compatible NVIDIA GPU and driver.
+
+### Base Environment
+
+Use this environment for static calculations and trajectory formats that do not require NetCDF:
+
 ```bash
 conda env create -f environment.yml
 conda activate pydelphi
 python -m pip install . --no-deps
 ```
 
-### CUDA and NetCDF
+### Trajectory/NetCDF Environment
+
+Use this environment when NetCDF trajectory input is required:
+
 ```bash
-conda env create -f environment-cuda.yml
-conda activate pydelphi-cuda
+conda env create -f environment-traj.yml
+conda activate pydelphi-traj
 python -m pip install . --no-deps
 ```
 
-The CUDA environment installs `numba-cuda` through Conda. A compatible NVIDIA driver is still required on the host system.
+The trajectory environment extends the base dependency stack with:
+
+```text
+netCDF4=1.7.3
+```
+
+Conda resolves the matching NetCDF-C, HDF5, and supporting native libraries. Other supported trajectory formats can also be used in this environment.
 
 ### From a Git Checkout
+
 ```bash
 git clone https://github.com/delphi001/pyDelPhi.git
 cd pyDelPhi
 conda env create -f environment.yml
 conda activate pydelphi
-python -m pip install -e . --no-deps
+python -m pip install . --no-deps
 ```
 
-Use editable installation (`-e`) only for development. For a released source distribution, use the normal non-editable installation shown above.
+For trajectory/NetCDF development, create `environment-traj.yml` instead and activate `pydelphi-traj`.
+
+Use editable installation (`-e`) only for development. For an unpacked source distribution, use the normal non-editable installation shown above.
 
 Verify installation:
+
 ```bash
 pydelphi-static --version
 ```
@@ -98,24 +128,26 @@ pydelphi-static --version
 
 pyDelPhi provides five primary executables:
 
-| Command | Purpose |
-|----------|----------|
-| `pydelphi-static` | Run a single Poisson–Boltzmann (PB) electrostatics calculation |
-| `pydelphi-trajectory` | Run PB calculations over a molecular trajectory |
-| `pydelphi-test` | Execute static-mode regression and consistency tests |
-| `pydelphi-test-traj` | Execute trajectory-mode regression tests |
-| `pydelphi-help` | Access built-in documentation and parameter reference |
+| Command               | Purpose                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| `pydelphi-static`     | Run a single Poisson–Boltzmann (PB) electrostatics calculation |
+| `pydelphi-trajectory` | Run PB calculations over a molecular trajectory                |
+| `pydelphi-test`       | Execute static-mode regression and consistency tests           |
+| `pydelphi-test-traj`  | Execute trajectory-mode regression tests                       |
+| `pydelphi-help`       | Access built-in documentation and parameter reference          |
 
 ---
 
 #### 🧮 `pydelphi-static` — Main Solver
 
 Run the solver on a biomolecular system:
+
 ```bash
 pydelphi-static --param-file params.inp --platform cuda --precision double --threads 32
 ```
 
 **Usage**
+
 ```
 usage: pydelphi_static.py [-h] [-V] [-P {cpu,cuda}] [-p {single,double}]
                           [-t THREADS] [-d DEVICE_ID] [-f PARAM_FILE]
@@ -123,22 +155,23 @@ usage: pydelphi_static.py [-h] [-V] [-P {cpu,cuda}] [-p {single,double}]
                           [-l LABEL] [-o OUTFILE] [-O] [-S]
 ```
 
-| Flag | Description | Default |
-|------|--------------|----------|
-| `-h`, `--help` | Show help and exit | — |
-| `-V`, `--version` | Print version and exit | — |
-| `-P`, `--platform {cpu,cuda}` | Compute platform | `cpu` |
-| `-p`, `--precision {single,double}` | Real precision | `double` |
-| `-t`, `--threads` | Number of CPU threads | `1` |
-| `-d`, `--device-id` | GPU device ID | `0` |
-| `-f`, `--param-file` | Input parameter file (required) | — |
-| `-v`, `--verbosity` | Output verbosity (`critical`→`trace`) | `info` |
-| `-l`, `--label` | Label for run | `pdbid` |
-| `-o`, `--outfile` | Output CSV filename | `outputs.csv` |
-| `-O`, `--overwrite` | Overwrite output file | `False` |
-| `-S`, `--setup-timing` | Print setup timing | `False` |
+| Flag                                | Description                           | Default       |
+| ----------------------------------- | ------------------------------------- | ------------- |
+| `-h`, `--help`                      | Show help and exit                    | —             |
+| `-V`, `--version`                   | Print version and exit                | —             |
+| `-P`, `--platform {cpu,cuda}`       | Compute platform                      | `cpu`         |
+| `-p`, `--precision {single,double}` | Real precision                        | `double`      |
+| `-t`, `--threads`                   | Number of CPU threads                 | `1`           |
+| `-d`, `--device-id`                 | GPU device ID                         | `0`           |
+| `-f`, `--param-file`                | Input parameter file (required)       | —             |
+| `-v`, `--verbosity`                 | Output verbosity (`critical`→`trace`) | `info`        |
+| `-l`, `--label`                     | Label for run                         | `pdbid`       |
+| `-o`, `--outfile`                   | Output CSV filename                   | `outputs.csv` |
+| `-O`, `--overwrite`                 | Overwrite output file                 | `False`       |
+| `-S`, `--setup-timing`              | Print setup timing                    | `False`       |
 
 Example:
+
 ```bash
 pydelphi-static -f examples/5tif/param_5tif_linear_trad.prm -P cpu -p double -t 4 -l 5TIF -O
 ```
@@ -148,11 +181,13 @@ pydelphi-static -f examples/5tif/param_5tif_linear_trad.prm -P cpu -p double -t 
 #### 🎞️ `pydelphi-trajectory` — Trajectory PB Calculations
 
 Run PB calculations over frames from a molecular trajectory:
+
 ```bash
 pydelphi-trajectory -f trajectory_params.inp -P cpu -p double -t 4 -O
 ```
 
 **Usage**
+
 ```
 usage: pydelphi-trajectory.py [-h] [-V] [-P {cpu,cuda}] [-p {single,double}]
                               [-t THREADS] [-d DEVICE_ID] [-f PARAM_FILE]
@@ -179,19 +214,21 @@ pydelphi-test --help
 ```
 
 **Usage**
+
 ```
 usage: pydelphi-test [-h] [--no-cuda] [--no-parallel] [--no-single] [--no-double]
 ```
 
-| Flag | Description |
-|------|--------------|
-| `-h`, `--help` | Show help and exit |
-| `--no-cuda` | Skip tests involving CUDA platforms |
+| Flag            | Description                          |
+| --------------- | ------------------------------------ |
+| `-h`, `--help`  | Show help and exit                   |
+| `--no-cuda`     | Skip tests involving CUDA platforms  |
 | `--no-parallel` | Skip tests with more than one thread |
-| `--no-single` | Skip tests using single precision |
-| `--no-double` | Skip tests using double precision |
+| `--no-single`   | Skip tests using single precision    |
+| `--no-double`   | Skip tests using double precision    |
 
 Example:
+
 ```bash
 pydelphi-test --no-cuda --no-parallel
 ```
@@ -210,24 +247,26 @@ pydelphi-test-traj --help
 ```
 
 **Usage**
+
 ```
 usage: pydelphi-test-traj [-h] [--no-cuda] [--no-parallel] [--no-single]
                            [--no-double] [--timeout TIMEOUT] [--verbose]
                            [--debug-files]
 ```
 
-| Flag | Description |
-|------|-------------|
-| `-h`, `--help` | Show help and exit |
-| `--no-cuda` | Skip CUDA configurations |
-| `--no-parallel` | Skip configurations using more than one thread |
-| `--no-single` | Skip single-precision configurations |
-| `--no-double` | Skip double-precision configurations |
-| `--timeout TIMEOUT` | Set the per-run timeout in seconds |
-| `--verbose` | Print additional progress information |
-| `--debug-files` | Preserve generated parameter files and computed TSV outputs under `pydelphi_traj_debug_files/` and record their full paths in the report |
+| Flag                | Description                                                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `-h`, `--help`      | Show help and exit                                                                                                                       |
+| `--no-cuda`         | Skip CUDA configurations                                                                                                                 |
+| `--no-parallel`     | Skip configurations using more than one thread                                                                                           |
+| `--no-single`       | Skip single-precision configurations                                                                                                     |
+| `--no-double`       | Skip double-precision configurations                                                                                                     |
+| `--timeout TIMEOUT` | Set the per-run timeout in seconds                                                                                                       |
+| `--verbose`         | Print additional progress information                                                                                                    |
+| `--debug-files`     | Preserve generated parameter files and computed TSV outputs under `pydelphi_traj_debug_files/` and record their full paths in the report |
 
 Example:
+
 ```bash
 pydelphi-test-traj --no-cuda --timeout 300
 ```
@@ -245,17 +284,18 @@ pydelphi-help -h
 ```
 
 **Usage**
+
 ```
 usage: pydelphi-help [-h] [-g GROUP] [-n PARAM_NAME] [-ln] [-lg]
 ```
 
-| Flag | Description |
-|------|-------------|
-| `-h`, `--help` | Show this message and exit |
-| `-g`, `--group GROUP` | Print help for parameters in a group |
+| Flag                            | Description                                             |
+| ------------------------------- | ------------------------------------------------------- |
+| `-h`, `--help`                  | Show this message and exit                              |
+| `-g`, `--group GROUP`           | Print help for parameters in a group                    |
 | `-n`, `--param-name PARAM_NAME` | Print help for a parameter or function-style help topic |
-| `-ln`, `--list-param-names` | List valid parameter and function help topics |
-| `-lg`, `--list-groups` | List valid parameter groups |
+| `-ln`, `--list-param-names`     | List valid parameter and function help topics           |
+| `-lg`, `--list-groups`          | List valid parameter groups                             |
 
 Help topics use the following convention:
 
@@ -264,6 +304,7 @@ Help topics use the following convention:
 - `function__namedattr` for a function-style construct, such as `in__crgsiz` for `in(crgsiz, ...)`.
 
 Examples:
+
 ```bash
 pydelphi-help -n grid_size
 pydelphi-help -n in__crgsiz
@@ -273,6 +314,7 @@ pydelphi-help --list-groups
 ```
 
 **Sample Output**
+
 ```
 full_name:   surface_method
 long_name:   surfacemethod
@@ -427,6 +469,7 @@ def main():
 ```
 
 **Key principles:**
+
 - **Single entry point:** CLI handles argument parsing and safety checks only.  
 - **Explicit configuration:** Platform, precision, and verbosity are globally set before solver execution.  
 - **Encapsulation:** All computational logic resides inside `DelphiApp`.  
@@ -436,13 +479,13 @@ def main():
 
 ### 🔹 Extensibility Points
 
-| Area | Module Path | Description |
-|------|--------------|-------------|
-| **New solvers** | `pydelphi/solver/` | Add new iterative schemes or nonlinear models. |
-| **Surface / dielectric models** | `pydelphi/space/core/` | Implement Gaussian or hybrid boundary schemes. |
-| **Energy components** | `pydelphi/energy/` | Add analytical or empirical energy terms. |
-| **Platform abstraction** | `pydelphi/foundation/platforms.py` | Extend to new backends or accelerators. |
-| **Configuration system** | `pydelphi/utils/io/inproc_helpers/param_definitions/` | Define new `.prm` keywords with aliases and validation. |
+| Area                            | Module Path                                           | Description                                             |
+| ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
+| **New solvers**                 | `pydelphi/solver/`                                    | Add new iterative schemes or nonlinear models.          |
+| **Surface / dielectric models** | `pydelphi/space/core/`                                | Implement Gaussian or hybrid boundary schemes.          |
+| **Energy components**           | `pydelphi/energy/`                                    | Add analytical or empirical energy terms.               |
+| **Platform abstraction**        | `pydelphi/foundation/platforms.py`                    | Extend to new backends or accelerators.                 |
+| **Configuration system**        | `pydelphi/utils/io/inproc_helpers/param_definitions/` | Define new `.prm` keywords with aliases and validation. |
 
 Each component is self-contained and unit-tested, ensuring that scientific accuracy and reproducibility are preserved during extension.
 
@@ -451,18 +494,22 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 ### 🔹 Recommended Development Workflow
 
 1. **Run validation suite locally:**
+   
    ```bash
    pydelphi-test --no-cuda
    pydelphi-test-traj --no-cuda
    ```
+   
    (use `--no-double` or `--no-single` to isolate precision tests)
 
 2. **Profile a new feature:**
+   
    ```bash
    python -m pydelphi.app.delphi my_params.prm
    ```
 
 3. **Inspect runtime configuration:**
+   
    ```bash
    pydelphi-help -n <param_name>
    ```
@@ -476,7 +523,7 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 ### 🔹 Guiding Philosophy
 
 > **“Accuracy is physics; performance is engineering.”**  
->  
+> 
 > pyDelPhi separates physical formulation (solver & dielectric model)  
 > from computational engineering (platform, precision, threading) —  
 > ensuring transparent, scientifically rigorous, and performance-portable implementations.
