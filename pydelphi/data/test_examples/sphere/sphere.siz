@@ -1,0 +1,6 @@
+!amino acid radius file by dfs  2/3/93 
+!last modification 7/94 to change charged resnames to default
+!pauling radii to match Wolfendon's transfer energies of side chains   
+!use with parseres.crg
+atom__res_radius_
+N     VAL   3.0          

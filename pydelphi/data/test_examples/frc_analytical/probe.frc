@@ -1,0 +1,14 @@
+DELPHI SITE POTENTIAL FILE
+grid size,percent fill:   161    8.75
+outer diel. and first one assigned :   80    2
+ionic strength (M):   0
+ion excl., probe radii:   2    1.4    1.4
+linear, nolinear iterations:   800    0
+boundary condition:   2
+Data Output:   ATOM POTENTIALS FIELDS                                           
+title: qdiffxas: qdiffxs4 with an improved surfacing routine
+
+
+ATOM DESCRIPTOR       GRID PT.    GRID FIELDS: (Ex, Ey, Ez)                     
+N3   GLN D 10          38.1317   -6.7208   -1.0031    0.0000                    
+total energy = 0 kt

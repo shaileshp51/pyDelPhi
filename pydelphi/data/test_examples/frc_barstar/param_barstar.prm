@@ -1,0 +1,23 @@
+scale=2.0
+grid_size=103
+!gridbox_margin=15.0
+
+in(modpdb4,file="barstar.pqr",format=pqr)
+!in(siz,file="amber.siz")
+!in(crg,file="amber.crg")
+in(frc,file="frc_probe-atoms.pqr")
+
+indi=2.0
+exdi=80.0
+prbrad=1.4
+salt=0.00
+
+bndcon=dipolar #2:dipolar
+maxc=0.0001
+linit=800
+!nonit=800
+
+site(q,a,f,p)
+out(frc,file="frc_py.out")
+energy(polar,c,g)
+

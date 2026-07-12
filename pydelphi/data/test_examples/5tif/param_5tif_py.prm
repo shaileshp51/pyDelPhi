@@ -1,0 +1,21 @@
+biomodel=pbe                                                                                                                                                                             
+surfacemethod=vdw !vdw
+dielectricmodel=twodielectric ! twodielectric
+surfaceoffset=0.0
+gaussian_exponent=2
+
+scale=2
+percentfill=70
+gridbox_type=cubic
+ 
+in(modpdb4,file="5tif.pqr", format="pqr")
+ 
+out(phi, file="phimap_5tif_py.cube", media="water", format="cube")
+
+indi=1.0
+exdi=80.0
+
+boundary_condition=coulombic
+salt=2.0
+
+max_delta_phi=5.0e-4

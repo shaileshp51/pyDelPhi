@@ -1,0 +1,30 @@
+! biomodel=pbe                                                                                                                                                                                                                            
+! surfacemethod=vdw
+! dielectricmodel=twodielectric
+! surfaceoffset=0.0
+ 
+! gridbox_type=cubic
+
+grid_size=161 
+scale=2.0
+
+in(pdb,file="./field-charges.pdb")
+in(siz,file="./field-charges.siz")
+in(crg,file="./field-charges.crg")
+in(frc,file="./probe.pdb")
+
+indi=2.0
+exdi=80.0
+
+prbrad=1.4
+salt=0.00
+
+bndcon=dipolar
+
+max_delta_phi=0.0005
+!linit=800
+site(a,q,f,p)
+
+out(frc,file="./probe_py.frc")
+energy(polar,c,g)
+
