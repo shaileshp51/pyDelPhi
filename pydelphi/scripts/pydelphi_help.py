@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
+"""
+Command-line help for pyDelPhi input parameters.
+"""
 
 import argparse
 import sys
@@ -24,26 +27,59 @@ import textwrap
 
 from pydelphi.utils.io.inproc import Inputs
 
-# Define a desired linewidth for help text
-HELP_LINEWIDTH = 100  # You can adjust this value
+
+HELP_LINEWIDTH = 100
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description="Detailed help for pydelphi input parameters",
-        usage="%(prog)s [-g group] [-n param_name]",
-    )
-    parser.add_argument(
-        "-g",
-        "--group",
-        help="Print help for parameters in the specified group",
-        choices=["none", "all"] + list(Inputs().param_groups.keys()),
-        default=None,
-        metavar="",
-    )
+def _dedupe_keep_order(items):
+    out = []
+    seen = set()
+    for item in items:
+        if item in seen:
+            continue
+        seen.add(item)
+        out.append(item)
+    return out
 
-    # --- Prepare necessary data structures ---
-    original_param_tuples = list(Inputs().params.keys())
+
+def _format_name_groups(
+    name_groups,
+    *,
+    width=HELP_LINEWIDTH,
+    initial_indent="  ",
+    subsequent_indent="  ",
+    block_size=5,
+    include_all=False,
+):
+    groups = [" OR ".join(_dedupe_keep_order(group)) for group in name_groups]
+
+    if include_all:
+        groups.insert(0, "all")
+
+    lines = []
+    for i in range(0, len(groups), block_size):
+        block = groups[i : i + block_size]
+        block_text = ", ".join(block)
+        if (i + block_size) < len(groups):
+            block_text += ","
+
+        lines.extend(
+            textwrap.wrap(
+                block_text,
+                width=width,
+                initial_indent=initial_indent,
+                subsequent_indent=subsequent_indent,
+            )
+        )
+
+        if (i + block_size) < len(groups):
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+def _build_param_maps(inp):
+    original_param_tuples = list(inp.params.keys())
 
     alias_to_primary_map = {}
     all_valid_aliases_set = set()
@@ -54,143 +90,189 @@ def parse_arguments():
             all_valid_aliases_set.add(alias)
             alias_to_primary_map[alias] = primary_name
 
-    # --- Prepare parts for the wrapped HELP message with blank lines ---
-    user_friendly_param_strings = [" OR ".join(t) for t in original_param_tuples]
+    return original_param_tuples, alias_to_primary_map, all_valid_aliases_set
 
-    # Build the options section with blank lines after every 5 entries
-    options_section_lines = []
 
-    initial_options_line_prefix = "Valid parameter options include: all,"
-    options_section_lines.extend(
-        textwrap.wrap(
-            initial_options_line_prefix,
+def _print_help_topic_convention(file=sys.stdout):
+    print(
+        "Help topic convention:\n"
+        "  name                  statement-style parameter, e.g. grid_size\n"
+        "  function              selector-free function, e.g. zeta for zeta(...)\n"
+        "  function__namedattr   function-style parameter construct, e.g. in__crgsiz for in(crgsiz, ...)",
+        file=file,
+    )
+
+
+def _print_param_names(original_param_tuples, *, include_all=True, file=sys.stdout):
+    _print_help_topic_convention(file=file)
+    print("", file=file)
+    print(
+        "Note: topics like func__namedattr represent function-style parameter "
+        "constructs such as func(namedattr, ...).",
+        file=file,
+    )
+    print("", file=file)
+    print("Valid parameter help topics:", file=file)
+    print(
+        _format_name_groups(
+            original_param_tuples,
             width=HELP_LINEWIDTH,
             initial_indent="  ",
             subsequent_indent="  ",
-        )
+            include_all=include_all,
+        ),
+        file=file,
     )
 
-    for i in range(0, len(user_friendly_param_strings), 5):
-        current_block = user_friendly_param_strings[i : i + 5]
-        block_text = ", ".join(current_block)
 
-        wrapped_block_lines = textwrap.wrap(
-            block_text,
+def _print_groups(inp, *, include_all=True, file=sys.stdout):
+    groups = list(inp.param_groups.keys())
+    if include_all:
+        groups = ["all"] + groups
+
+    print("Valid parameter groups:", file=file)
+    print(
+        _format_name_groups(
+            [(group,) for group in groups],
             width=HELP_LINEWIDTH,
             initial_indent="  ",
             subsequent_indent="  ",
-        )
-        options_section_lines.extend(wrapped_block_lines)
-
-        if (i + 5) < len(user_friendly_param_strings):
-            options_section_lines.append("")  # Blank line
-
-    # Full wrapped help message
-    intro_text = (
-        "Print help for the specified parameter. "
-        "Parameters may have multiple interchangeable names (aliases) "
-        "separated by 'OR'. You can use any of these names to specify the parameter. "
+            include_all=False,
+        ),
+        file=file,
     )
-    wrapped_intro_text = textwrap.fill(intro_text, width=HELP_LINEWIDTH)
-    wrapped_help_message = (
-        wrapped_intro_text + "\n\n" + "\n".join(options_section_lines)
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Detailed help for pydelphi input parameters",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Help topic convention:\n"
+            "  name                  statement-style parameter, e.g. grid_size\n"
+            "  function              selector-free function, e.g. zeta for zeta(...)\n"
+            "  function__namedattr   function-style parameter construct, e.g. in__crgsiz for in(crgsiz, ...)\n\n"
+            "Examples:\n"
+            "  pydelphi-help -n grid_size\n"
+            "  pydelphi-help -n in__crgsiz\n"
+            "  pydelphi-help -g infile\n"
+            "  pydelphi-help --list-param-names\n"
+            "  pydelphi-help --list-groups"
+        ),
+    )
+
+    parser.add_argument(
+        "-g",
+        "--group",
+        metavar="GROUP",
+        help=(
+            "Print help for parameters in the specified group. "
+            "Use --list-groups to show valid groups."
+        ),
     )
 
     parser.add_argument(
         "-n",
         "--param-name",
-        help=wrapped_help_message,
-        default=None,
         metavar="PARAM_NAME",
+        help=(
+            "Print help for the specified parameter/function help topic. "
+            "Use --list-param-names to show valid names."
+        ),
     )
 
-    return (
-        parser.parse_args(),
-        all_valid_aliases_set,
-        alias_to_primary_map,
-        original_param_tuples,
+    parser.add_argument(
+        "-ln",
+        "--list-param-names",
+        action="store_true",
+        help="List valid parameter/function help topics.",
     )
 
-
-def main():
-    args, all_valid_aliases_set, alias_to_primary_map, original_param_tuples = (
-        parse_arguments()
+    parser.add_argument(
+        "-lg",
+        "--list-groups",
+        action="store_true",
+        help="List valid parameter groups.",
     )
+
+    return parser
+
+
+def main(argv=None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
     inp = Inputs()
+    original_param_tuples, alias_to_primary_map, all_valid_aliases_set = (
+        _build_param_maps(inp)
+    )
+
+    if not any(
+        (
+            args.group,
+            args.param_name,
+            args.list_param_names,
+            args.list_groups,
+        )
+    ):
+        parser.print_help()
+        return 0
+
+    if args.list_param_names:
+        _print_param_names(original_param_tuples, include_all=True)
+        return 0
+
+    if args.list_groups:
+        _print_groups(inp, include_all=True)
+        return 0
 
     if args.group is not None:
-        if args.group.lower() == "none":
-            # Trigger argparse's built-in help display
-            parser = argparse.ArgumentParser(
-                description="Detailed help for pydelphi input parameters",
-                usage="%(prog)s [-g group] [-n param_name]",
-            )
-            parser.print_help()
-            sys.exit(0)
-        elif args.group == "all":
+        group = args.group.strip()
+
+        if group == "all":
             inp.help(groups=list(inp.param_groups.keys()), detailed=True)
-        else:
-            inp.help(groups=[args.group], detailed=True)
-    elif args.param_name is not None:
-        if args.param_name == "all":
-            primary_param_names = [t[0] for t in Inputs().params.keys()]
-            inp.help(params=primary_param_names, detailed=True)
-        elif args.param_name not in all_valid_aliases_set:
-            # --- Format the error message like the help message ---
-            ERROR_LINEWIDTH = HELP_LINEWIDTH - 10
-            ERROR_INITIAL_INDENT = "      "
-            ERROR_SUBSEQUENT_INDENT = "      "
+            return 0
 
-            user_friendly_param_strings = [
-                " OR ".join(t) for t in original_param_tuples
-            ]
-
-            error_message_lines = []
-
-            # Add the initial "Choose from: all," line
-            initial_error_prefix = "all,"
-            error_message_lines.extend(
-                textwrap.wrap(
-                    initial_error_prefix,
-                    width=ERROR_LINEWIDTH,
-                    initial_indent=ERROR_INITIAL_INDENT,
-                    subsequent_indent=ERROR_SUBSEQUENT_INDENT,
-                )
-            )
-
-            # Add parameters in blocks of 5, with blank lines between
-            for i in range(0, len(user_friendly_param_strings), 5):
-                current_block = user_friendly_param_strings[i : i + 5]
-                block_text = ", ".join(current_block)
-
-                wrapped_block_lines = textwrap.wrap(
-                    block_text,
-                    width=ERROR_LINEWIDTH,
-                    initial_indent=ERROR_INITIAL_INDENT,
-                    subsequent_indent=ERROR_SUBSEQUENT_INDENT,
-                )
-                error_message_lines.extend(wrapped_block_lines)
-
-                if (i + 5) < len(user_friendly_param_strings):
-                    error_message_lines.append("")  # Blank line after each block
-
-            # Print the final error message
+        if group not in inp.param_groups:
             print(
-                f"pydelphi-help: error: argument -n/--param-name: invalid choice: '{args.param_name}'.\n"
-                f"Parameter names may have multiple interchangeable names (aliases) separated by 'OR'.\n"
-                f"Choose from:",
+                f"pydelphi-help: error: unknown group: '{group}'.\n\n"
+                "Run:\n"
+                "  pydelphi-help --list-groups",
                 file=sys.stderr,
             )
-            print("\n".join(error_message_lines), file=sys.stderr)
-            sys.exit(2)
-        else:
-            resolved_param_name = alias_to_primary_map.get(
-                args.param_name, args.param_name
+            return 2
+
+        inp.help(groups=[group], detailed=True)
+        return 0
+
+    if args.param_name is not None:
+        param_name = args.param_name.strip()
+
+        if param_name == "all":
+            primary_param_names = [t[0] for t in original_param_tuples]
+            inp.help(params=primary_param_names, detailed=True)
+            return 0
+
+        if param_name not in all_valid_aliases_set:
+            print(
+                f"pydelphi-help: error: unknown parameter help topic: '{param_name}'.\n\n"
+                "Run:\n"
+                "  pydelphi-help --list-param-names\n\n"
+                "For selector-style function help, use:\n"
+                "  function__selector\n\n"
+                "Example:\n"
+                "  pydelphi-help -n in__crgsiz",
+                file=sys.stderr,
             )
-            inp.help(params=[resolved_param_name], detailed=True)
-    else:
-        inp.help(detailed=True)
+            return 2
+
+        resolved_param_name = alias_to_primary_map[param_name]
+        inp.help(params=[resolved_param_name], detailed=True)
+        return 0
+
+    parser.print_help()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

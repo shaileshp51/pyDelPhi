@@ -35,7 +35,37 @@ from pydelphi.config.global_runtime import (
 from pydelphi.foundation.enumbase import BaseInfoEnum
 from pydelphi.foundation.enums import (
     ParamType,
+    ParamStatus,
 )
+from pydelphi.utils.io.format.format_resolver import (
+    resolve_call_format_auto,
+)
+
+
+def _format_param_status(status, status_desc=None):
+    """
+    Format lifecycle status for parameter help output.
+
+    ACTIVE parameters do not print a status line. DEPRECATED and RETIRED
+    parameters print explicit user-facing lifecycle information.
+    """
+    if status is None:
+        return None
+
+    if status.int_value == ParamStatus.SUPPORTED.int_value:
+        return None
+
+    if status.int_value == ParamStatus.DEPRECATED.int_value:
+        label = "[DEPRECATED]"
+    elif status.int_value == ParamStatus.RETIRED.int_value:
+        label = "[RETIRED] IGNORED, no longer supported"
+    else:
+        label = f"[{status.name}]"
+
+    if status_desc:
+        return f"{label} {status_desc}"
+
+    return label
 
 
 def param_typecheck(
@@ -141,6 +171,66 @@ def param_typecheck(
     return value_obj
 
 
+class ParamParseError(ValueError):
+    """
+    User-facing parameter-file parse/validation error.
+
+    This exception is for invalid user input parameter files. CLI/front-end
+    entry points should catch it and print str(exc), without a traceback.
+    """
+
+    def __init__(
+        self,
+        message,
+        *,
+        record=None,
+        line_no=None,
+        function_name=None,
+        function_alias=None,
+        selector=None,
+        attribute=None,
+        help_topic=None,
+        available_help_topics=None,
+    ):
+        self.message = str(message)
+        self.record = record
+        self.line_no = line_no
+        self.function_name = function_name
+        self.function_alias = function_alias
+        self.selector = selector
+        self.attribute = attribute
+        self.help_topic = help_topic
+        self.available_help_topics = list(available_help_topics or [])
+        super().__init__(self.render())
+
+    def render(self):
+        if self.line_no is not None:
+            parts = [f"ERROR: Invalid parameter file at line {self.line_no}."]
+        else:
+            parts = ["ERROR: Invalid parameter file."]
+
+        if self.record:
+            parts.extend(["", "Function call:", f"  {self.record}"])
+
+        parts.extend(["", "Problem:", f"  {self.message}"])
+
+        if self.available_help_topics:
+            parts.extend(
+                [
+                    "",
+                    "Available selector help topics:",
+                    "  " + ", ".join(self.available_help_topics),
+                ]
+            )
+
+        if self.help_topic:
+            parts.extend(["", "Help:", f"  Run: pydelphi-help -n {self.help_topic}"])
+        elif self.available_help_topics:
+            parts.extend(["", "Help:", "  Run: pydelphi-help --list-names"])
+
+        return "\n".join(parts)
+
+
 class Parameter:
     """
     Base class representing a generic Delphi parameter.
@@ -166,6 +256,8 @@ class Parameter:
         self.description_short = None
         self.description_long = None
         self.required = None
+        self.status = ParamStatus.SUPPORTED
+        self.status_desc = None
 
 
 class ParamStatement(Parameter):
@@ -211,6 +303,8 @@ class ParamStatement(Parameter):
         desc_long="",
         override=True,
         required=False,
+        status=ParamStatus.SUPPORTED,
+        status_desc=None,
     ):
         """
         Initializes a DelphiParamStatement object.
@@ -244,6 +338,8 @@ class ParamStatement(Parameter):
         self.description_long = desc_long
         self.override = override
         self.required = required
+        self.status = status
+        self.status_desc = status_desc
         self.active = True
         self.issupplied = False
 
@@ -292,13 +388,16 @@ class ParamStatement(Parameter):
         Returns:
             str: A formatted string containing help information for the parameter statement.
         """
-        import textwrap
 
         outs = [
             f"{'':{indent}s}{'full_name:':{fieldwidth}s} {self.full_name}",
             f"{'':{indent}s}{'long_name:':{fieldwidth}s} {self.long_name}",
             f"{'':{indent}s}{'short_name:':{fieldwidth}s} {self.short_name}",
         ]
+
+        status_line = _format_param_status(self.status, self.status_desc)
+        if status_line:
+            outs.append(f"{'':{indent}s}{'status:':{fieldwidth}s} {status_line}")
 
         if self.units is not None:
             outs.append(f"{'':{indent}s}{'unit:':{fieldwidth}s} {self.units}")
@@ -342,7 +441,8 @@ class ParamStatement(Parameter):
                 name_label = f"{option_name:<{max_option_name_len}s}: "
 
                 # Wrap the description, ensuring no initial indent as we'll apply it manually
-                wrapped_desc_lines = textwrap.fill(
+                # wrapped_desc_lines = option_desc
+                wrapped_desc_lines = tw.fill(
                     option_desc,
                     width=effective_wrap_width,
                     break_long_words=False,  # Prevents breaking words like DOIs/URLs
@@ -382,7 +482,7 @@ class ParamStatement(Parameter):
                 f"{'':{indent}s}{'description:':{fieldwidth}s} {self.description_short}"
             )
         else:
-            wrapped_long_desc = textwrap.fill(
+            wrapped_long_desc = tw.fill(
                 self.description_long,
                 width=linewidth - (indent + fieldwidth + 2),
                 initial_indent=" " * (indent + fieldwidth + 2),
@@ -420,6 +520,8 @@ class ParamFunctionAttribute:
         inuse=False,
         default=None,
         value=None,
+        status=ParamStatus.SUPPORTED,
+        status_desc=None,
     ):
         """
         Initializes a DelphiParamFunctionAttribute object.
@@ -442,6 +544,8 @@ class ParamFunctionAttribute:
         self.default = default
         self.value = value
         self.description = desc
+        self.status = status
+        self.status_desc = status_desc
 
     def set(self, value):
         """Set the value of the attribute."""
@@ -461,11 +565,81 @@ class ParamFunctionAttribute:
             return self.name
         return '{}="{}"'.format(self.name, self.value)
 
-    def help(self):
-        """Return a help string for the attribute."""
+    def help(self, width: int = 100):
+        """
+        Return a wrapped help string for the attribute.
+
+        The canonical attribute name is shown first. If an alias exists and is
+        different from the canonical name, it is shown explicitly so shorthand
+        input forms are not hidden from users.
+        """
+        alias = getattr(self, "alias", None)
+
         if self.nameonly:
-            return f"{self.name}: {self.description}"
-        return f'{self.name}="{self.value}": {self.description}'
+            if alias and alias != self.name:
+                head = f"{self.name} or {alias}: "
+            else:
+                head = f"{self.name}: "
+        else:
+            value = self.value
+            if value is None:
+                value = ""
+
+            canonical = f'{self.name}="{value}"'
+            if alias and alias != self.name:
+                alias_form = f'{alias}="{value}"'
+                head = f"{canonical} or {alias_form}: "
+            else:
+                head = f"{canonical}: "
+
+        body = self.description
+
+        status_line = _format_param_status(self.status, self.status_desc)
+        if status_line:
+            body = f"{status_line}\n        {body}"
+
+        indent = " " * 8
+
+        return tw.fill(
+            head + body,
+            width=width,
+            subsequent_indent=indent,
+            replace_whitespace=False,
+            drop_whitespace=False,
+        )
+
+    # def help(self, width: int = 100):
+    #     """
+    #     Return a wrapped help string for the attribute.
+    #
+    #     Parameters
+    #     ----------
+    #     width : int, default 100
+    #         Maximum line width for wrapping.
+    #     """
+    #     if self.nameonly:
+    #         head = f"{self.name}: "
+    #         body = self.description
+    #     else:
+    #         alias_str = (
+    #             f' or {self.alias}="{self.value}"' if self.name != self.alias else ""
+    #         )
+    #         head = f'{self.name}="{self.value}"{alias_str}: '
+    #         body = self.description
+    #
+    #     status_line = _format_param_status(self.status, self.status_desc)
+    #     if status_line:
+    #         body = f"{status_line} {body}"
+    #
+    #     indent = " " * 8
+    #
+    #     return tw.fill(
+    #         head + body,
+    #         width=width,
+    #         subsequent_indent=indent,
+    #         replace_whitespace=False,
+    #         drop_whitespace=False,
+    #     )
 
 
 class ParamFunction(Parameter):
@@ -495,6 +669,10 @@ class ParamFunction(Parameter):
         desc_long="",
         active=False,
         required=False,
+        multicall=False,
+        status=ParamStatus.SUPPORTED,
+        status_desc=None,
+        help_topic=None,
     ):
         """
         Initializes a DelphiParamFunction object.
@@ -507,6 +685,7 @@ class ParamFunction(Parameter):
             desc_long (str, optional): Long description. Defaults to "".
             active (bool, optional): Function is initially active. Defaults to False.
             required (bool, optional): Function is required. Defaults to False.
+            multicall (bool, optional): Whether multiple occurances of function is supported. Defaults to False.
         """
         super().__init__()
         self.partype = ParamType.FUNCTION
@@ -517,7 +696,72 @@ class ParamFunction(Parameter):
         self.description_long = desc_long
         self.active = active
         self.required = required
+        self.multicall = bool(multicall)
+        self.calls = []  # list[dict[str, Any]]; used when multicall=True
         self.issupplied = False
+        self.status = status
+        self.status_desc = status_desc
+        self.help_topic = help_topic
+
+    def first_nameonly_attribute(self):
+        """Return the first attribute if it is the name-only selector."""
+        if self.attributes and getattr(self.attributes[0], "nameonly", False):
+            return self.attributes[0]
+        return None
+
+    def effective_help_topic(self, selector=None):
+        """
+        Return the canonical help topic for this function-style parameter.
+
+        Selector functions use:
+            function__selector
+
+        The explicit self.help_topic wins because internal selector names can
+        differ from public selector tokens.
+        """
+        if self.help_topic:
+            return self.help_topic
+
+        if selector:
+            return f"{self.name}__{selector}"
+
+        first = self.first_nameonly_attribute()
+        if first is not None:
+            public_selector = getattr(first, "alias", None) or getattr(
+                first, "name", None
+            )
+            if public_selector:
+                return f"{self.name}__{public_selector}"
+
+        return self.name
+
+    def _undefined_attribute_error(
+        self,
+        name,
+        *,
+        record=None,
+        line_no=None,
+        selector=None,
+    ):
+        first = self.first_nameonly_attribute()
+        selector = selector or (
+            getattr(first, "alias", None) or getattr(first, "name", None)
+            if first is not None
+            else None
+        )
+        func_label = (
+            f"{self.name}({selector}, ...)" if selector else f"{self.name}(...)"
+        )
+        return ParamParseError(
+            f"Undefined attribute '{name}' for {func_label}.",
+            record=record,
+            line_no=line_no,
+            function_name=self.name,
+            function_alias=self.alias,
+            selector=selector,
+            attribute=name,
+            help_topic=self.effective_help_topic(selector),
+        )
 
     def add_attribute(self, attrib):
         """Add a new attribute to the function."""
@@ -526,28 +770,41 @@ class ParamFunction(Parameter):
         else:
             raise AttributeError(f"Unknown attribute {attrib}")
 
-    def set_attribute(self, name, value=""):
+    def set_attribute(
+        self,
+        name,
+        value="",
+        *,
+        record=None,
+        line_no=None,
+        selector=None,
+    ):
         """Set the value of an attribute by name or alias."""
         for attr in self.attributes:
             if attr.name == name or attr.alias == name:
                 attr.value = value if not attr.nameonly else None
                 attr.inuse = True
                 return
-        raise Exception(f"Undefined attribute: {name}")
+        raise self._undefined_attribute_error(
+            name,
+            record=record,
+            line_no=line_no,
+            selector=selector,
+        )
 
     def get_attribute(self, name):
         """Retrieve the value of an attribute by name or alias."""
         for attr in self.attributes:
             if attr.name == name or attr.alias == name:
                 return attr.value
-        raise Exception(f"Undefined attribute: {name}")
+        raise self._undefined_attribute_error(name)
 
     def is_attribute_inuse(self, name):
-        """Retrieve the value of an attribute by name or alias."""
+        """Return whether an attribute is in use by name or alias."""
         for attr in self.attributes:
             if attr.name == name or attr.alias == name:
                 return attr.inuse
-        raise Exception(f"Undefined attribute: {name}")
+        raise self._undefined_attribute_error(name)
 
     def activate(self):
         """Activate the function."""
@@ -561,29 +818,127 @@ class ParamFunction(Parameter):
         """Mark the function input supplied by user."""
         self.issupplied = True
 
+    def normalize_call(self, call: dict) -> dict:
+        return resolve_call_format_auto(call)
+
+    def current_call(self, *, normalize: bool = True) -> dict:
+        call = {}
+        for a in self.attributes:
+            if a.nameonly:
+                if a.inuse:
+                    call[a.name] = True
+            else:
+                call[a.name] = a.value
+        if normalize:
+            return self.normalize_call(call)
+        return call
+
+    def normalize_current_attributes(self) -> None:
+        call = self.current_call(normalize=True)
+        for a in self.attributes:
+            if a.nameonly:
+                continue
+            if a.name in call:
+                a.value = call[a.name]
+            elif a.alias in call:
+                a.value = call[a.alias]
+
+    def snapshot_call(self) -> dict:
+        """
+        Snapshot a single function-call spec.
+
+        Rules:
+        - nameonly attributes are markers: include them only if inuse (store True)
+        - normal attributes: always include their current value (default or overridden)
+          so that label/file/fmt/etc are always present in the call record.
+        """
+        call = {}
+        for a in self.attributes:
+            if a.nameonly:
+                if a.inuse:
+                    call[a.name] = True
+            else:
+                call[a.name] = a.value
+        return self.normalize_call(call)
+
+    def reset_inuse(self):
+        for a in self.attributes:
+            a.inuse = False
+
     def __str__(self):
         """Return a string representation of the function."""
         if self.active:
             return f"    {self.name}({', '.join(str(a) for a in self.attributes)})"
         return ""
 
-    def help(self, detailed=False, indent=0, fieldwidth=12, linewidth=90):
+    def _attribute_usage_token(self, attr):
+        """
+        Return one attribute's canonical syntax token for function usage examples.
+
+        The usage header should show canonical parameter-file syntax. Shorthand
+        aliases are documented below in attr.help(), not in the usage header.
+        """
+        attr_name = getattr(attr, "name", "")
+
+        if getattr(attr, "nameonly", False):
+            return str(attr_name)
+
+        value = getattr(attr, "value", None)
+        if value is None or value == "" or value == "0.0":
+            value = "value"
+
+        return f'{attr_name}="{value}"'
+
+    def usage_signature(self, indent=0, linewidth=90):
+        """
+        Return a user-facing function-style syntax example.
+        """
+        pad = " " * indent
+        inner_pad = " " * (indent + 2)
+
+        tokens = [self._attribute_usage_token(attr) for attr in self.attributes]
+
+        if not tokens:
+            return f"{pad}{self.name}()"
+
+        if len(tokens) == 1:
+            candidate = f"{pad}{self.name}({tokens[0]})"
+            if len(candidate) <= linewidth:
+                return candidate
+
+        lines = [f"{pad}{self.name}("]
+        for i, token in enumerate(tokens):
+            comma = "," if i < len(tokens) - 1 else ""
+            lines.append(f"{inner_pad}{token}{comma}")
+        lines.append(f"{pad})")
+        return "\n".join(lines)
+
+    def help(self, detailed=False, indent=0, fieldwidth=20, linewidth=90):
         """
         Returns detailed help information for the parameter function.
 
-        Args:
-            detailed (bool, optional): If True, returns the long description; otherwise, short description. Defaults to False.
-            indent (int, optional): Indentation level for the help output. Defaults to 0.
-            fieldwidth (int, optional): Width of the field names in the help output. Defaults to 12.
-            linewidth (int, optional): Maximum line width for the help output. Defaults to 90.
-
-        Returns:
-            str: Formatted help string for the parameter function, including attributes.
+        The first block shows the expected input syntax. Attribute details,
+        aliases, defaults, and descriptions follow below the syntax header.
         """
+        usage = self.usage_signature(indent=indent, linewidth=linewidth)
+
         outs = [
-            f"{'':{indent}s}{'name:':{fieldwidth}s} {self.name}",
-            f"{'':{indent}s}{'alias:':{fieldwidth}s} {self.alias}",
+            f"{'':{indent}s}{'input format:':{fieldwidth}s}",
+            usage,
+            "",
+            f"{'':{indent}s}For valid values of attributes see below:",
+            "",
+            f"{'':{indent}s}{'function_name:':{fieldwidth}s} {self.name}",
+            f"{'':{indent}s}{'function_alias:':{fieldwidth}s} {self.alias}",
         ]
+
+        help_topic = getattr(self, "help_topic", None)
+        if help_topic:
+            outs.append(f"{'':{indent}s}{'help_topic:':{fieldwidth}s} {help_topic}")
+
+        status_line = _format_param_status(self.status, self.status_desc)
+        if status_line:
+            outs.append(f"{'':{indent}s}{'status:':{fieldwidth}s} {status_line}")
 
         if self.attributes:
             outs.append(
@@ -594,9 +949,16 @@ class ParamFunction(Parameter):
             )
 
         description = self.description_short if not detailed else self.description_long
-        outs.append(
-            f"{'':{indent}s}{'description:':{fieldwidth}s} {self.description_long}"
-        )
+        desc_prefix = f"{'':{indent}s}{'description:':{fieldwidth}s} "
+        desc_subseq = " " * len(desc_prefix)
+        wrapped_description = str(description)
+        # wrapped_description = tw.fill(
+        #     str(description),
+        #     width=linewidth,
+        #     initial_indent=desc_prefix,
+        #     subsequent_indent=desc_subseq,
+        # )
+        outs.append(wrapped_description)
 
         return "\n".join(outs) + "\n"
 

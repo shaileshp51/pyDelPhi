@@ -60,7 +60,10 @@ from pydelphi.config.global_runtime import (
 )
 
 from pydelphi.config.logging_config import (
-    DEBUG, INFO, VERBOSE, get_effective_verbosity,
+    DEBUG,
+    INFO,
+    VERBOSE,
+    get_effective_verbosity,
 )
 
 _MODULE_NAME = __name__
@@ -682,7 +685,7 @@ def _rf_energy_gpu(
         out_nthreads_device = cuda.to_device(
             np.zeros(shape=(threads_per_block * blocks,), dtype=np.float64)
         )
-        kernel[blocks, threads_per_block](
+        kernel[int(blocks), int(threads_per_block)](
             induced_surf_charges_flat,
             induced_surf_charge_positions,
             atoms_data,
@@ -832,9 +835,7 @@ def calc_induced_charge_rf_energy(
         _VERBOSITY,
         f"Time calculating induced surf rf energy: {toc_rf_erg - tic_rf_erg:0.3f}",
     )
-    nprint_cpu(
-        DEBUG, _VERBOSITY, "Calculated Solvation Energy: {energy_solvation}"
-    )
+    nprint_cpu(DEBUG, _VERBOSITY, "Calculated Solvation Energy: {energy_solvation}")
     if dump_arrays:
         pp.pprint(f"induced_surf_charge_positions:")
         pp.pprint(induced_surf_charge_positions)

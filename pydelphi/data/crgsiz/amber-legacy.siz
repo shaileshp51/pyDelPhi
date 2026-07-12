@@ -1,0 +1,1458 @@
+!
+!   This file was created from amber98.prm
+!       file from TINKER package
+!    Radius of all  strange  hydrogens with
+!      zero vdw radius was changed to 0.6
+! The format of this siz file is 
+! Column 1-6  Atom name  column 7-12  Residuename 
+! column 13-18  atom size.
+atom__res_radius_
+1H          1.250
+2H          1.250
+3H          1.250
+H1          1.250
+H2          1.250
+H3          1.250
+
+OXT         1.480
+N     ALA   1.8240
+H     ALA   0.6000
+CA    ALA   1.9080
+HA    ALA   1.3870
+CB    ALA   1.9080
+1HB   ALA   1.4870
+2HB   ALA   1.4870
+3HB   ALA   1.4870
+HB1   ALA   1.4870
+HB2   ALA   1.4870
+HB3   ALA   1.4870
+C     ALA   1.9080
+O     ALA   1.6612
+
+N     ARG   1.8240
+H     ARG   0.6000
+CA    ARG   1.9080
+HA    ARG   1.3870
+CB    ARG   1.9080
+1HB   ARG   1.4870
+2HB   ARG   1.4870
+3HB   ARG   1.4870
+HB1   ARG   1.4870
+HB2   ARG   1.4870
+HB3   ARG   1.4870
+CG    ARG   1.9080
+1HG   ARG   1.4870
+2HG   ARG   1.4870
+3HG   ARG   1.4870
+HG1   ARG   1.4870
+HG2   ARG   1.4870
+HG3   ARG   1.4870
+CD    ARG   1.9080
+1HD   ARG   1.3870
+2HD   ARG   1.3870
+3HD   ARG   1.3870
+HD1   ARG   1.3870
+HD2   ARG   1.3870
+HD3   ARG   1.3870
+NE    ARG   1.8240
+HE    ARG   0.6000
+CZ    ARG   1.9080
+NH1   ARG   1.8240
+1NH   ARG   1.8240
+2NH   ARG   1.8240
+NH2   ARG   1.8240
+1HH1  ARG   0.6000
+2HH1  ARG   0.6000
+1HH2  ARG   0.6000
+2HH2  ARG   0.6000
+HH11  ARG   0.6000
+HH12  ARG   0.6000
+HH21  ARG   0.6000
+HH22  ARG   0.6000
+C     ARG   1.9080
+O     ARG   1.6612
+
+N     ASN   1.8240
+H     ASN   0.6000
+CA    ASN   1.9080
+HA    ASN   1.3870
+CB    ASN   1.9080
+1HB   ASN   1.4870
+2HB   ASN   1.4870
+3HB   ASN   1.4870
+HB1   ASN   1.4870
+HB2   ASN   1.4870
+HB3   ASN   1.4870
+CG    ASN   1.9080
+OD1   ASN   1.6612
+1OD   ASN   1.6612
+ND2   ASN   1.8240
+2ND   ASN   1.8240
+1HD2  ASN   0.6000
+2HD2  ASN   0.6000
+HD21  ASN   0.6000
+HD22  ASN   0.6000
+C     ASN   1.9080
+O     ASN   1.6612
+
+N     ASP   1.8240
+H     ASP   0.6000
+CA    ASP   1.9080
+HA    ASP   1.3870
+CB    ASP   1.9080
+1HB   ASP   1.4870
+2HB   ASP   1.4870
+3HB   ASP   1.4870
+HB1   ASP   1.4870
+HB2   ASP   1.4870
+HB3   ASP   1.4870
+CG    ASP   1.9080
+1OD   ASP   1.6612
+2OD   ASP   1.6612
+OD1   ASP   1.6612
+OD2   ASP   1.6612
+C     ASP   1.9080
+O     ASP   1.6612
+
+N     CYS   1.8240
+H     CYS   0.6000
+CA    CYS   1.9080
+HA    CYS   1.3870
+CB    CYS   1.9080
+1HB   CYS   1.3870
+2HB   CYS   1.3870
+3HB   CYS   1.3870
+HB1   CYS   1.3870
+HB2   CYS   1.3870
+HB3   CYS   1.3870
+SG    CYS   2.0000
+HG    CYS   0.6000
+C     CYS   1.9080
+O     CYS   1.6612
+
+N     CSS   1.8240 !!Cysteine bridge residue
+H     CSS   0.6000
+CA    CSS   1.9080
+HA    CSS   1.3870
+CB    CSS   1.9080
+1HB   CSS   1.3870
+2HB   CSS   1.3870
+3HB   CSS   1.3870
+HB1   CSS   1.3870
+HB2   CSS   1.3870
+HB3   CSS   1.3870
+SG    CSS   2.0000
+HG    CSS   0.6000
+C     CSS   1.9080
+O     CSS   1.6612
+
+N     CYX   1.8240
+H     CYX   0.6000
+CA    CYX   1.9080
+HA    CYX   1.3870
+CB    CYX   1.9080
+1HB   CYX   1.3870
+2HB   CYX   1.3870
+3HB   CYX   1.3870
+HB1   CYX   1.3870
+HB2   CYX   1.3870
+HB3   CYX   1.3870
+SG    CYX   2.0000
+C     CYX   1.9080
+O     CYX   1.6612
+
+N     GLU   1.8240
+H     GLU   0.6000
+CA    GLU   1.9080
+HA    GLU   1.3870
+CB    GLU   1.9080
+1HB   GLU   1.4870
+2HB   GLU   1.4870
+3HB   GLU   1.4870
+HB1   GLU   1.4870
+HB2   GLU   1.4870
+HB3   GLU   1.4870
+CG    GLU   1.9080
+1HG   GLU   1.4870
+2HG   GLU   1.4870
+3HG   GLU   1.4870
+HG1   GLU   1.4870
+HG2   GLU   1.4870
+HG3   GLU   1.4870
+CD    GLU   1.9080
+1OE   GLU   1.6612
+2OE   GLU   1.6612
+OE1   GLU   1.6612
+OE2   GLU   1.6612
+C     GLU   1.9080
+O     GLU   1.6612
+
+N     GLN   1.8240
+H     GLN   0.6000
+CA    GLN   1.9080
+HA    GLN   1.3870
+CB    GLN   1.9080
+1HB   GLN   1.4870
+2HB   GLN   1.4870
+3HB   GLN   1.4870
+HB1   GLN   1.4870
+HB2   GLN   1.4870
+HB3   GLN   1.4870
+CG    GLN   1.9080
+1HG   GLN   1.4870
+2HG   GLN   1.4870
+3HG   GLN   1.4870
+HG1   GLN   1.4870
+HG2   GLN   1.4870
+HG3   GLN   1.4870
+CD    GLN   1.9080
+OE1   GLN   1.6612
+NE2   GLN   1.8240
+1HE2  GLN   0.6000
+2HE2  GLN   0.6000
+HE21  GLN   0.6000
+HE22  GLN   0.6000
+C     GLN   1.9080
+O     GLN   1.6612
+H1    GLN   0.6000
+H2    GLN   0.6000
+H3    GLN   0.6000
+
+N     GLY   1.8240
+H     GLY   0.6000
+CA    GLY   1.9080
+1HA   GLY   1.3870
+2HA   GLY   1.3870
+3HA   GLY   1.3870
+HA1   GLY   1.3870
+HA2   GLY   1.3870
+HA3   GLY   1.3870
+C     GLY   1.9080
+O     GLY   1.6612
+H1    GLY   0.6000
+H2    GLY   0.6000
+H3    GLY   0.6000
+
+N     HIS   1.8240
+H     HIS   0.6000
+CA    HIS   1.9080
+HA    HIS   1.3870
+CB    HIS   1.9080
+1HB   HIS   1.4870
+2HB   HIS   1.4870
+3HB   HIS   1.4870
+HB1   HIS   1.4870
+HB2   HIS   1.4870
+HB3   HIS   1.4870
+CG    HIS   1.9080
+ND1   HIS   1.8240
+1ND   HIS   1.8240
+CE1   HIS   1.9080
+1CE   HIS   1.9080
+NE2   HIS   1.8240
+2NE   HIS   1.8240
+CD2   HIS   1.9080
+2CD   HIS   1.9080
+HD1   HIS   0.6000
+HD2   HIS   1.4090
+1HD   HIS   0.6000
+2HD   HIS   1.4090
+HE1   HIS   1.3590
+HE2   HIS   0.6000
+1HE   HIS   1.3590
+2HE   HIS   0.6000
+C     HIS   1.9080
+O     HIS   1.6612
+
+N     HIP   1.8240
+H     HIP   0.6000
+CA    HIP   1.9080
+HA    HIP   1.3870
+CB    HIP   1.9080
+1HB   HIP   1.4870
+2HB   HIP   1.4870
+3HB   HIP   1.4870
+HB1   HIP   1.4870
+HB2   HIP   1.4870
+HB3   HIP   1.4870
+CG    HIP   1.9080
+ND1   HIP   1.8240
+1ND   HIP   1.8240
+1CE   HIP   1.9080
+CE1   HIP   1.9080
+NE2   HIP   1.8240
+2NE   HIP   1.8240
+CD2   HIP   1.9080
+2CD   HIP   1.9080
+HD1   HIP   0.6000
+HD2   HIP   1.4090
+1HD   HIP   0.6000
+2HD   HIP   1.4090
+HE1   HIP   1.3590
+HE2   HIP   0.6000
+1HE   HIP   1.3590
+2HE   HIP   0.6000
+C     HIP   1.9080
+O     HIP   1.6612
+
+N     HID   1.8240
+H     HID   0.6000
+CA    HID   1.9080
+HA    HID   1.3870
+CB    HID   1.9080
+HB2   HID   1.9080 
+HB3   HID   1.9080
+2HB   HID   1.9080 
+3HB   HID   1.9080 
+CG    HID   1.9080
+ND1   HID   1.8240
+1ND   HID   1.8240
+CE1   HID   1.9080
+1CE   HID   1.9080
+NE2   HID   1.8240
+2NE   HID   1.8240
+CD2   HID   1.9080
+2CD   HID   1.9080
+HD1   HID   0.6000
+HD2   HID   1.4090
+1HD   HID   0.6000
+2HD   HID   1.4090
+HE1   HID   1.3590
+HE2   HID   0.6000
+1HE   HID   1.3590
+2HE   HID   0.6000
+C     HID   1.9080
+O     HID   1.6612
+
+N     HIE   1.8240
+H     HIE   0.6000
+CA    HIE   1.9080
+HA    HIE   1.3870
+CB    HIE   1.9080
+HB2   HIE   1.9080 
+HB3   HIE   1.9080 
+2HB   HIE   1.9080 
+3HB   HIE   1.9080
+CG    HIE   1.9080
+ND1   HIE   1.8240
+CE1   HIE   1.9080
+NE2   HIE   1.8240
+CD2   HIE   1.9080
+HD1   HIE   0.6000
+HD2   HIE   1.4090
+HE1   HIE   1.3590
+HE2   HIE   0.6000
+1ND   HIE   1.8240
+1CE   HIE   1.9080
+2NE   HIE   1.8240
+2CD   HIE   1.9080
+1HD   HIE   0.6000
+2HD   HIE   1.4090
+1HE   HIE   1.3590
+2HE   HIE   0.6000
+C     HIE   1.9080
+O     HIE   1.6612
+
+N     ILE   1.8240
+H     ILE   0.6000
+CA    ILE   1.9080
+HA    ILE   1.3870
+CB    ILE   1.9080
+HB    ILE   1.4870
+CG2   ILE   1.9080
+1HG2  ILE   1.4870
+2HG2  ILE   1.4870
+3HG2  ILE   1.4870
+HG21  ILE   1.4870
+HG22  ILE   1.4870
+HG23  ILE   1.4870
+CG1   ILE   1.9080
+1CG   ILE   1.9080
+1HG1  ILE   1.4870
+2HG1  ILE   1.4870
+3HG1  ILE   1.4870
+HG11  ILE   1.4870
+HG12  ILE   1.4870
+HG13  ILE   1.4870
+CD1   ILE   1.9080
+1HD1  ILE   1.4870
+2HD1  ILE   1.4870
+3HD1  ILE   1.4870
+HD11  ILE   1.4870
+HD12  ILE   1.4870
+HD13  ILE   1.4870
+C     ILE   1.9080
+O     ILE   1.6612
+
+N     LEU   1.8240
+H     LEU   0.6000
+CA    LEU   1.9080
+HA    LEU   1.3870
+CB    LEU   1.9080
+1HB   LEU   1.4870
+2HB   LEU   1.4870
+3HB   LEU   1.4870
+HB1   LEU   1.4870
+HB2   LEU   1.4870
+HB3   LEU   1.4870
+CG    LEU   1.9080
+HG    LEU   1.4870
+CD1   LEU   1.9080
+1CD   LEU   1.9080
+1HD1  LEU   1.4870
+2HD1  LEU   1.4870
+3HD1  LEU   1.4870
+HD11  LEU   1.4870
+HD12  LEU   1.4870
+HD13  LEU   1.4870
+CD2   LEU   1.9080
+1HD2  LEU   1.4870
+2HD2  LEU   1.4870
+3HD2  LEU   1.4870
+HD21  LEU   1.4870
+HD22  LEU   1.4870
+HD23  LEU   1.4870
+C     LEU   1.9080
+O     LEU   1.6612
+
+N     LYS   1.8240
+H     LYS   0.6000
+CA    LYS   1.9080
+HA    LYS   1.3870
+CB    LYS   1.9080
+1HB   LYS   1.4870
+2HB   LYS   1.4870
+3HB   LYS   1.4870
+HB1   LYS   1.4870
+HB2   LYS   1.4870
+HB3   LYS   1.4870
+CG    LYS   1.9080
+1HG   LYS   1.4870
+2HG   LYS   1.4870
+3HG   LYS   1.4870
+HG1   LYS   1.4870
+HG2   LYS   1.4870
+HG3   LYS   1.4870
+CD    LYS   1.9080
+1HD   LYS   1.4870
+2HD   LYS   1.4870
+3HD   LYS   1.4870
+HD1   LYS   1.4870
+HD2   LYS   1.4870
+HD3   LYS   1.4870
+CE    LYS   1.9080
+1HE   LYS   1.1000
+2HE   LYS   1.1000
+3HE   LYS   1.1000
+HE1   LYS   1.1000
+HE2   LYS   1.1000
+HE3   LYS   1.1000
+NZ    LYS   1.8750
+1HZ   LYS   0.6000
+2HZ   LYS   0.6000
+3HZ   LYS   0.6000
+HZ1   LYS   0.6000
+HZ2   LYS   0.6000
+HZ3   LYS   0.6000
+C     LYS   1.9080
+O     LYS   1.6612
+
+N     MET   1.8240
+H     MET   0.6000
+CA    MET   1.9080
+HA    MET   1.3870
+CB    MET   1.9080
+1HB   MET   1.4870
+2HB   MET   1.4870
+3HB   MET   1.4870
+HB1   MET   1.4870
+HB2   MET   1.4870
+HB3   MET   1.4870
+CG    MET   1.9080
+1HG   MET   1.3870
+2HG   MET   1.3870
+3HG   MET   1.3870
+HG1   MET   1.3870
+HG2   MET   1.3870
+HG3   MET   1.3870
+SD    MET   2.0000
+CE    MET   1.9080
+1HE   MET   1.3870
+2HE   MET   1.3870
+3HE   MET   1.3870
+HE1   MET   1.3870
+HE2   MET   1.3870
+HE3   MET   1.3870
+C     MET   1.9080
+O     MET   1.6612
+
+N     PHE   1.8240 
+H     PHE   0.6000
+CA    PHE   1.9080
+HA    PHE   1.3870
+CB    PHE   1.9080
+1HB   PHE   1.4870
+2HB   PHE   1.4870
+3HB   PHE   1.4870
+HB1   PHE   1.4870
+HB2   PHE   1.4870
+HB3   PHE   1.4870
+CG    PHE   1.9080
+CD1   PHE   1.9080
+HD1   PHE   1.4590
+CD2   PHE   1.9080
+HD2   PHE   1.4590
+CE1   PHE   1.9080 
+HE1   PHE   1.4590
+CE2   PHE   1.9080
+HE2   PHE   1.4590
+1CD   PHE   1.9080
+1HD   PHE   1.4590
+2CD   PHE   1.9080
+2HD   PHE   1.4590
+1CE   PHE   1.9080 
+1HE   PHE   1.4590
+2CE   PHE   1.9080
+2HE   PHE   1.4590
+CZ    PHE   1.9080
+HZ    PHE   1.4590
+C     PHE   1.9080
+O     PHE   1.6612
+
+N     PRO   1.8240
+CA    PRO   1.9080
+HA    PRO   1.3870
+CD    PRO   1.9080
+1HD   PRO   1.3870
+2HD   PRO   1.3870
+3HD   PRO   1.3870
+HD1   PRO   1.3870
+HD2   PRO   1.3870
+HD3   PRO   1.3870
+CB    PRO   1.9080
+1HB   PRO   1.4870
+2HB   PRO   1.4870
+3HB   PRO   1.4870
+HB1   PRO   1.4870
+HB2   PRO   1.4870
+HB3   PRO   1.4870
+CG    PRO   1.9080
+1HG   PRO   1.4870
+2HG   PRO   1.4870
+3HG   PRO   1.4870
+HG1   PRO   1.4870
+HG2   PRO   1.4870 
+HG3   PRO   1.4870 
+C     PRO   1.9080
+O     PRO   1.6612
+
+N     SER   1.8240
+H     SER   0.6000
+CA    SER   1.9080
+HA    SER   1.3870
+CB    SER   1.9080
+1HB   SER   1.3870
+2HB   SER   1.3870
+3HB   SER   1.3870
+HB1   SER   1.3870
+HB2   SER   1.3870
+HB3   SER   1.3870
+OG    SER   1.7210
+HG    SER   0.6000 !HG    SER   0.0001
+C     SER   1.9080
+O     SER   1.6612
+
+N     THR   1.8240
+H     THR   0.6000
+CA    THR   1.9080
+HA    THR   1.3870
+CB    THR   1.9080
+HB    THR   1.3870
+OG1   THR   1.7210
+HG1   THR   0.6000 !HG1   THR   0.0001
+CG2   THR   1.9080
+1OG   THR   1.7210
+1HG   THR   0.6000 !1HG   THR   0.0001
+2CG   THR   1.9080
+1HG2  THR   1.4870
+2HG2  THR   1.4870
+3HG2  THR   1.4870
+HG21  THR   1.4870
+HG22  THR   1.4870
+HG23  THR   1.4870
+C     THR   1.9080
+O     THR   1.6612
+
+
+N     TRP   1.8240
+H     TRP   0.6000
+CA    TRP   1.9080
+HA    TRP   1.3870
+CB    TRP   1.9080
+1HB   TRP   1.4870
+2HB   TRP   1.4870
+3HB   TRP   1.4870
+HB1   TRP   1.4870
+HB2   TRP   1.4870
+HB3   TRP   1.4870
+CG    TRP   1.9080
+CD2   TRP   1.9080
+CD1   TRP   1.9080
+HD1   TRP   1.4090
+NE1   TRP   1.8240
+HE1   TRP   0.6000
+CE2   TRP   1.9080
+CE3   TRP   1.9080
+HE3   TRP   1.4590
+CZ2   TRP   1.9080
+HZ2   TRP   1.4590
+CZ3   TRP   1.9080
+HZ3   TRP   1.4590
+CH2   TRP   1.9080
+HH2   TRP   1.4590
+2CD   TRP   1.9080
+1CD   TRP   1.9080
+1HD   TRP   1.4090
+1NE   TRP   1.8240
+1HE   TRP   0.6000
+2CE   TRP   1.9080
+3CE   TRP   1.9080
+3HE   TRP   1.4590
+2CZ   TRP   1.9080
+2HZ   TRP   1.4590
+3CZ   TRP   1.9080
+3HZ   TRP   1.4590
+2CH   TRP   1.9080
+2HH   TRP   1.4590
+C     TRP   1.9080
+O     TRP   1.6612
+
+N     TYR   1.8240
+H     TYR   0.6000
+CA    TYR   1.9080
+HA    TYR   1.3870
+CB    TYR   1.9080
+1HB   TYR   1.4870
+2HB   TYR   1.4870
+3HB   TYR   1.4870
+HB1   TYR   1.4870
+HB2   TYR   1.4870
+HB3   TYR   1.4870
+CG    TYR   1.9080
+CD1   TYR   1.9080
+HD1   TYR   1.4590
+CD2   TYR   1.9080
+HD2   TYR   1.4590
+CE1   TYR   1.9080
+HE1   TYR   1.4590
+CE2   TYR   1.9080
+HE2   TYR   1.4590
+1CD   TYR   1.9080
+1HD   TYR   1.4590
+2CD   TYR   1.9080
+2HD   TYR   1.4590
+1CE   TYR   1.9080
+1HE   TYR   1.4590
+2CE   TYR   1.9080
+2HE   TYR   1.4590
+CZ    TYR   1.9080
+OH    TYR   1.7210
+HH    TYR   0.6000  !HH    TYR   0.0001
+C     TYR   1.9080
+O     TYR   1.6612
+
+N     VAL   1.8240
+H     VAL   0.6000
+CA    VAL   1.9080
+HA    VAL   1.3870
+CB    VAL   1.9080
+HB    VAL   1.4870 
+CG1   VAL   1.9080
+1CG   VAL   1.9080
+CG2   VAL   1.9080
+2CG   VAL   1.9080
+1HG1  VAL   1.4870 
+2HG1  VAL   1.4870 
+3HG1  VAL   1.4870 
+HG11  VAL   1.4870
+HG12  VAL   1.4870
+HG13  VAL   1.4870
+1HG2  VAL   1.4870 
+2HG2  VAL   1.4870 
+3HG2  VAL   1.4870 
+HG21  VAL   1.4870
+HG22  VAL   1.4870
+HG23  VAL   1.4870
+C     VAL   1.9080
+O     VAL   1.6612
+
+P     A     2.1000
+O1P   A     1.6612
+O2P   A     1.6612
+OP1   A     1.6612
+OP2   A     1.6612
+O5    A     1.6837
+C5    A     1.9080
+H5 1  A     1.3870
+H5 2  A     1.3870
+H5    A     1.3870
+H5    A     1.3870
+H5T   A     1.3870
+C4    A     1.9080
+H4    A     1.3870
+O4    A     1.6837
+C1    A     1.9080
+H1    A     1.2870
+N9    A     1.8240
+C8    A     1.9080
+H8    A     1.3590
+N7    A     1.8240
+C5    A     1.9080
+C6    A     1.9080
+N6    A     1.8240
+H61   A     0.6000
+H62   A     0.6000
+N1    A     1.8240
+C2    A     1.9080
+H2    A     1.3590
+N3    A     1.8240
+C4    A     1.9080
+C3    A     1.9080
+H3    A     1.3870
+H3T   A     1.3870
+C2    A     1.9080
+H2 1  A     1.3870
+H2    A     1.3870
+O2    A     1.7210
+HO 2  A     1.0000
+HO2   A     1.0000
+O3    A     1.6837
+P     C     2.1000
+O1P   C     1.6612
+O2P   C     1.6612
+OP1   C     1.6612
+OP2   C     1.6612
+O5    C     1.6837
+C5    C     1.9080
+H5 1  C     1.3870
+H5 2  C     1.3870
+H5    C     1.3870
+H5    C     1.3870
+H5T   C     1.3870
+C4    C     1.9080
+H4    C     1.3870
+O4    C     1.6837
+C1    C     1.9080
+H1    C     1.2870
+N1    C     1.8240
+C6    C     1.9080
+H6    C     1.4090
+C5    C     1.9080
+H5    C     1.4590
+C4    C     1.9080
+N4    C     1.8240
+H41   C     0.6000
+H42   C     0.6000
+N3    C     1.8240
+C2    C     1.9080
+O2    C     1.6612
+C3    C     1.9080
+H3    C     1.3870
+H3T   C     1.3870
+C2    C     1.9080
+H2 1  C     1.3870
+H2    C     1.3870
+O2    C     1.7210
+HO 2  C     1.0000
+HO2   C     1.0000
+O3    C     1.6837
+P     G     2.1000
+O1P   G     1.6612
+O2P   G     1.6612
+OP1   G     1.6612
+OP2   G     1.6612
+O5    G     1.6837
+C5    G     1.9080
+H5 1  G     1.3870
+H5 2  G     1.3870
+H5    G     1.3870
+H5    G     1.3870
+H5T   G     1.3870
+C4    G     1.9080
+H4    G     1.3870
+O4    G     1.6837
+C1    G     1.9080
+H1    G     1.2870
+N9    G     1.8240
+C8    G     1.9080
+H8    G     1.3590
+N7    G     1.8240
+C5    G     1.9080
+C6    G     1.9080
+O6    G     1.6612
+N1    G     1.8240
+H1    G     0.6000
+C2    G     1.9080
+N2    G     1.8240
+H21   G     0.6000
+H22   G     0.6000
+N3    G     1.8240
+C4    G     1.9080
+C3    G     1.9080
+H3    G     1.3870
+H3T   G     1.3870
+C2    G     1.9080
+H2 1  G     1.3870
+H2    G     1.3870
+O2    G     1.7210
+HO 2  G     1.0000
+HO2   G     1.0000
+O3    G     1.6837
+P     U     2.1000
+O1P   U     1.6612
+O2P   U     1.6612
+OP1   U     1.6612
+OP2   U     1.6612
+O5    U     1.6837
+C5    U     1.9080
+H5 1  U     1.3870
+H5 2  U     1.3870
+H5    U     1.3870
+H5T   U     1.3870
+H5    U     1.3870
+C4    U     1.9080
+H4    U     1.3870
+O4    U     1.6837
+C1    U     1.9080
+H1    U     1.2870
+N1    U     1.8240
+C6    U     1.9080
+H6    U     1.4090
+C5    U     1.9080
+H5    U     1.4590
+C4    U     1.9080
+O4    U     1.6612
+N3    U     1.8240
+H3    U     0.6000
+C2    U     1.9080
+O2    U     1.6612
+C3    U     1.9080
+H3    U     1.3870
+H3T   U     1.3870
+C2    U     1.9080
+H2 1  U     1.3870
+H2    U     1.3870
+O2    U     1.7210
+HO 2  U     1.0000
+HO2   U     1.0000
+O3    U     1.6837
+P     DT    2.1000
+O1P   DT    1.6612
+O2P   DT    1.6612
+OP1   DT    1.6612
+OP2   DT    1.6612
+O5    DT    1.6837
+C5    DT    1.9080
+H5 1  DT    1.3870
+H5 2  DT    1.3870
+H5    DT    1.3870
+H5    DT    1.3870
+H5T   DT    1.3870
+C4    DT    1.9080
+H4    DT    1.3870
+O4    DT    1.6837
+C1    DT    1.9080
+H1    DT    1.2870
+N1    DT    1.8240
+C6    DT    1.9080
+H6    DT    1.4090
+C5    DT    1.9080
+C7    DT    1.9080
+H71   DT    1.4870
+H72   DT    1.4870
+H73   DT    1.4870
+C4    DT    1.9080
+O4    DT    1.6612
+N3    DT    1.8240
+H3    DT    0.6000
+C2    DT    1.9080
+O2    DT    1.6612
+C3    DT    1.9080
+H3    DT    1.3870
+H3T   DT    1.3870
+C2    DT    1.9080
+H2 1  DT    1.4870
+H2 2  DT    1.4870
+H2    DT    1.4870
+H2    DT    1.4870
+O3    DT    1.6837
+P     DG    2.1000
+O1P   DG    1.6612
+O2P   DG    1.6612
+OP1   DG    1.6612
+OP2   DG    1.6612
+O5    DG    1.6837
+C5    DG    1.9080
+H5 1  DG    1.3870
+H5 2  DG    1.3870
+H5    DG    1.3870
+H5    DG    1.3870
+H5T   DG    1.3870
+C4    DG    1.9080
+H4    DG    1.3870
+O4    DG    1.6837
+C1    DG    1.9080
+H1    DG    1.2870
+N9    DG    1.8240
+C8    DG    1.9080
+H8    DG    1.3590
+N7    DG    1.8240
+C5    DG    1.9080
+C6    DG    1.9080
+O6    DG    1.6612
+N1    DG    1.8240
+H1    DG    0.6000
+C2    DG    1.9080
+N2    DG    1.8240
+H21   DG    0.6000
+H22   DG    0.6000
+N3    DG    1.8240
+C4    DG    1.9080
+C3    DG    1.9080
+H3    DG    1.3870
+H3T   DG    1.3870
+C2    DG    1.9080
+H2 1  DG    1.4870
+H2 2  DG    1.4870
+H2    DG    1.4870
+H2    DG    1.4870
+O3    DG    1.6837
+P     DC    2.1000
+O1P   DC    1.6612
+O2P   DC    1.6612
+OP1   DC    1.6612
+OP2   DC    1.6612
+O5    DC    1.6837
+C5    DC    1.9080
+H5 1  DC    1.3870
+H5 2  DC    1.3870
+H5    DC    1.3870
+H5    DC    1.3812
+H5T   DC    1.3812
+C4    DC    1.9080
+H4    DC    1.3870
+O4    DC    1.6837
+C1    DC    1.9080
+H1    DC    1.2870
+N1    DC    1.8240
+C6    DC    1.9080
+H6    DC    1.4090
+C5    DC    1.9080
+H5    DC    1.4590
+C4    DC    1.9080
+N4    DC    1.8240
+H41   DC    0.6000
+H42   DC    0.6000
+N3    DC    1.8240
+C2    DC    1.9080
+O2    DC    1.6612
+C3    DC    1.9080
+H3    DC    1.3870
+H3T   DC    1.3870
+C2    DC    1.9080
+H2 1  DC    1.4870
+H2 2  DC    1.4870
+H2    DC    1.4870
+H2    DC    1.4870
+O3    DC    1.6837
+P     DA    2.1000
+O1P   DA    1.6612
+O2P   DA    1.6612
+OP1   DA    1.6612
+OP2   DA    1.6612
+O5    DA    1.6837
+C5    DA    1.9080
+H5 1  DA    1.3870
+H5 2  DA    1.3870
+H5    DA    1.3870
+H5    DA    1.3870
+H5T   DA    1.3870
+C4    DA    1.9080
+H4    DA    1.3870
+O4    DA    1.6837
+C1    DA    1.9080
+H1    DA    1.2870
+N9    DA    1.8240
+C8    DA    1.9080
+H8    DA    1.3590
+N7    DA    1.8240
+C5    DA    1.9080
+C6    DA    1.9080
+N6    DA    1.8240
+H61   DA    0.6000
+H62   DA    0.6000
+N1    DA    1.8240
+C2    DA    1.9080
+H2    DA    1.3590
+N3    DA    1.8240
+C4    DA    1.9080
+C3    DA    1.9080
+H3    DA    1.3870
+H3T   DA    1.3870
+C2    DA    1.9080
+H2 1  DA    1.4870
+H2 2  DA    1.4870
+H2    DA    1.4870
+H2    DA    1.4870
+O3    DA    1.6837
+
+! ---------------------------------------------------------------------------
+! Compatibility aliases added by pyDelPhi helper script.
+! Values are copied only from entries already present in this same parameter set.
+! Existing entries are never overwritten.
+! Conservative residue aliases include HIS protonation-state variants 
+! AS- GL- LY+ AR+ charged aliases  and CYX CSS disulfide aliases.
+! Conservative atom aliases include H HN  terminal H HT names 
+! and numbered hydrogen forms such as 1HB  -  HB1.
+! ---------------------------------------------------------------------------
+1HT              1.250  ! alias added from 1H
+HT1              1.250  ! alias added from 1H
+2HT              1.250  ! alias added from 2H
+HT2              1.250  ! alias added from 2H
+3HT              1.250  ! alias added from 3H
+HT3              1.250  ! alias added from 3H
+HN    ALA       0.6000  ! alias added from H ALA
+N     AR+       1.8240  ! alias added from N ARG
+H     AR+       0.6000  ! alias added from H ARG
+HN    AR+       0.6000  ! alias added from H ARG
+HN    ARG       0.6000  ! alias added from H ARG
+CA    AR+       1.9080  ! alias added from CA ARG
+HA    AR+       1.3870  ! alias added from HA ARG
+CB    AR+       1.9080  ! alias added from CB ARG
+1HB   AR+       1.4870  ! alias added from 1HB ARG
+HB1   AR+       1.4870  ! alias added from 1HB ARG
+2HB   AR+       1.4870  ! alias added from 2HB ARG
+HB2   AR+       1.4870  ! alias added from 2HB ARG
+3HB   AR+       1.4870  ! alias added from 3HB ARG
+HB3   AR+       1.4870  ! alias added from 3HB ARG
+CG    AR+       1.9080  ! alias added from CG ARG
+1HG   AR+       1.4870  ! alias added from 1HG ARG
+HG1   AR+       1.4870  ! alias added from 1HG ARG
+2HG   AR+       1.4870  ! alias added from 2HG ARG
+HG2   AR+       1.4870  ! alias added from 2HG ARG
+3HG   AR+       1.4870  ! alias added from 3HG ARG
+HG3   AR+       1.4870  ! alias added from 3HG ARG
+CD    AR+       1.9080  ! alias added from CD ARG
+1HD   AR+       1.3870  ! alias added from 1HD ARG
+HD1   AR+       1.3870  ! alias added from 1HD ARG
+2HD   AR+       1.3870  ! alias added from 2HD ARG
+HD2   AR+       1.3870  ! alias added from 2HD ARG
+3HD   AR+       1.3870  ! alias added from 3HD ARG
+HD3   AR+       1.3870  ! alias added from 3HD ARG
+NE    AR+       1.8240  ! alias added from NE ARG
+HE    AR+       0.6000  ! alias added from HE ARG
+CZ    AR+       1.9080  ! alias added from CZ ARG
+1NH   AR+       1.8240  ! alias added from NH1 ARG
+NH1   AR+       1.8240  ! alias added from NH1 ARG
+2NH   AR+       1.8240  ! alias added from 2NH ARG
+NH2   AR+       1.8240  ! alias added from 2NH ARG
+1HH1  AR+       0.6000  ! alias added from 1HH1 ARG
+HH11  AR+       0.6000  ! alias added from 1HH1 ARG
+2HH1  AR+       0.6000  ! alias added from 2HH1 ARG
+HH12  AR+       0.6000  ! alias added from 2HH1 ARG
+1HH2  AR+       0.6000  ! alias added from 1HH2 ARG
+HH21  AR+       0.6000  ! alias added from 1HH2 ARG
+2HH2  AR+       0.6000  ! alias added from 2HH2 ARG
+HH22  AR+       0.6000  ! alias added from 2HH2 ARG
+C     AR+       1.9080  ! alias added from C ARG
+O     AR+       1.6612  ! alias added from O ARG
+HN    ASN       0.6000  ! alias added from H ASN
+N     AS-       1.8240  ! alias added from N ASP
+H     AS-       0.6000  ! alias added from H ASP
+HN    AS-       0.6000  ! alias added from H ASP
+HN    ASP       0.6000  ! alias added from H ASP
+CA    AS-       1.9080  ! alias added from CA ASP
+HA    AS-       1.3870  ! alias added from HA ASP
+CB    AS-       1.9080  ! alias added from CB ASP
+1HB   AS-       1.4870  ! alias added from 1HB ASP
+HB1   AS-       1.4870  ! alias added from 1HB ASP
+2HB   AS-       1.4870  ! alias added from 2HB ASP
+HB2   AS-       1.4870  ! alias added from 2HB ASP
+3HB   AS-       1.4870  ! alias added from 3HB ASP
+HB3   AS-       1.4870  ! alias added from 3HB ASP
+CG    AS-       1.9080  ! alias added from CG ASP
+1OD   AS-       1.6612  ! alias added from 1OD ASP
+OD1   AS-       1.6612  ! alias added from 1OD ASP
+2OD   AS-       1.6612  ! alias added from 2OD ASP
+OD2   AS-       1.6612  ! alias added from 2OD ASP
+C     AS-       1.9080  ! alias added from C ASP
+O     AS-       1.6612  ! alias added from O ASP
+HN    CYS       0.6000  ! alias added from H CYS
+HN    CSS       0.6000  ! alias added from H CSS
+HN    CYX       0.6000  ! alias added from H CSS
+HG    CYX       0.6000  ! alias added from HG CSS
+N     GL-       1.8240  ! alias added from N GLU
+H     GL-       0.6000  ! alias added from H GLU
+HN    GL-       0.6000  ! alias added from H GLU
+HN    GLU       0.6000  ! alias added from H GLU
+CA    GL-       1.9080  ! alias added from CA GLU
+HA    GL-       1.3870  ! alias added from HA GLU
+CB    GL-       1.9080  ! alias added from CB GLU
+1HB   GL-       1.4870  ! alias added from 1HB GLU
+HB1   GL-       1.4870  ! alias added from 1HB GLU
+2HB   GL-       1.4870  ! alias added from 2HB GLU
+HB2   GL-       1.4870  ! alias added from 2HB GLU
+3HB   GL-       1.4870  ! alias added from 3HB GLU
+HB3   GL-       1.4870  ! alias added from 3HB GLU
+CG    GL-       1.9080  ! alias added from CG GLU
+1HG   GL-       1.4870  ! alias added from 1HG GLU
+HG1   GL-       1.4870  ! alias added from 1HG GLU
+2HG   GL-       1.4870  ! alias added from 2HG GLU
+HG2   GL-       1.4870  ! alias added from 2HG GLU
+3HG   GL-       1.4870  ! alias added from 3HG GLU
+HG3   GL-       1.4870  ! alias added from 3HG GLU
+CD    GL-       1.9080  ! alias added from CD GLU
+1OE   GL-       1.6612  ! alias added from 1OE GLU
+OE1   GL-       1.6612  ! alias added from 1OE GLU
+2OE   GL-       1.6612  ! alias added from 2OE GLU
+OE2   GL-       1.6612  ! alias added from 2OE GLU
+C     GL-       1.9080  ! alias added from C GLU
+O     GL-       1.6612  ! alias added from O GLU
+HN    GLN       0.6000  ! alias added from H GLN
+1OE   GLN       1.6612  ! alias added from OE1 GLN
+2NE   GLN       1.8240  ! alias added from NE2 GLN
+1H    GLN       0.6000  ! alias added from H1 GLN
+1HT   GLN       0.6000  ! alias added from H1 GLN
+HT1   GLN       0.6000  ! alias added from H1 GLN
+2H    GLN       0.6000  ! alias added from H2 GLN
+2HT   GLN       0.6000  ! alias added from H2 GLN
+HT2   GLN       0.6000  ! alias added from H2 GLN
+3H    GLN       0.6000  ! alias added from H3 GLN
+3HT   GLN       0.6000  ! alias added from H3 GLN
+HT3   GLN       0.6000  ! alias added from H3 GLN
+HN    GLY       0.6000  ! alias added from H GLY
+1H    GLY       0.6000  ! alias added from H1 GLY
+1HT   GLY       0.6000  ! alias added from H1 GLY
+HT1   GLY       0.6000  ! alias added from H1 GLY
+2H    GLY       0.6000  ! alias added from H2 GLY
+2HT   GLY       0.6000  ! alias added from H2 GLY
+HT2   GLY       0.6000  ! alias added from H2 GLY
+3H    GLY       0.6000  ! alias added from H3 GLY
+3HT   GLY       0.6000  ! alias added from H3 GLY
+HT3   GLY       0.6000  ! alias added from H3 GLY
+HN    HIS       0.6000  ! alias added from H HIS
+N     HI+       1.8240  ! alias added from N HIP
+N     HSP       1.8240  ! alias added from N HIP
+H     HI+       0.6000  ! alias added from H HIP
+H     HSP       0.6000  ! alias added from H HIP
+HN    HI+       0.6000  ! alias added from H HIP
+HN    HIP       0.6000  ! alias added from H HIP
+HN    HSP       0.6000  ! alias added from H HIP
+CA    HI+       1.9080  ! alias added from CA HIP
+CA    HSP       1.9080  ! alias added from CA HIP
+HA    HI+       1.3870  ! alias added from HA HIP
+HA    HSP       1.3870  ! alias added from HA HIP
+CB    HI+       1.9080  ! alias added from CB HIP
+CB    HSP       1.9080  ! alias added from CB HIP
+1HB   HI+       1.4870  ! alias added from 1HB HIP
+1HB   HSP       1.4870  ! alias added from 1HB HIP
+HB1   HI+       1.4870  ! alias added from 1HB HIP
+HB1   HSP       1.4870  ! alias added from 1HB HIP
+2HB   HI+       1.4870  ! alias added from 2HB HIP
+2HB   HSP       1.4870  ! alias added from 2HB HIP
+HB2   HI+       1.4870  ! alias added from 2HB HIP
+HB2   HSP       1.4870  ! alias added from 2HB HIP
+3HB   HI+       1.4870  ! alias added from 3HB HIP
+3HB   HSP       1.4870  ! alias added from 3HB HIP
+HB3   HI+       1.4870  ! alias added from 3HB HIP
+HB3   HSP       1.4870  ! alias added from 3HB HIP
+CG    HI+       1.9080  ! alias added from CG HIP
+CG    HSP       1.9080  ! alias added from CG HIP
+1ND   HI+       1.8240  ! alias added from ND1 HIP
+1ND   HSP       1.8240  ! alias added from ND1 HIP
+ND1   HI+       1.8240  ! alias added from ND1 HIP
+ND1   HSP       1.8240  ! alias added from ND1 HIP
+1CE   HI+       1.9080  ! alias added from 1CE HIP
+1CE   HSP       1.9080  ! alias added from 1CE HIP
+CE1   HI+       1.9080  ! alias added from 1CE HIP
+CE1   HSP       1.9080  ! alias added from 1CE HIP
+2NE   HI+       1.8240  ! alias added from NE2 HIP
+2NE   HSP       1.8240  ! alias added from NE2 HIP
+NE2   HI+       1.8240  ! alias added from NE2 HIP
+NE2   HSP       1.8240  ! alias added from NE2 HIP
+2CD   HI+       1.9080  ! alias added from CD2 HIP
+2CD   HSP       1.9080  ! alias added from CD2 HIP
+CD2   HI+       1.9080  ! alias added from CD2 HIP
+CD2   HSP       1.9080  ! alias added from CD2 HIP
+1HD   HI+       0.6000  ! alias added from HD1 HIP
+1HD   HSP       0.6000  ! alias added from HD1 HIP
+HD1   HI+       0.6000  ! alias added from HD1 HIP
+HD1   HSP       0.6000  ! alias added from HD1 HIP
+2HD   HI+       1.4090  ! alias added from HD2 HIP
+2HD   HSP       1.4090  ! alias added from HD2 HIP
+HD2   HI+       1.4090  ! alias added from HD2 HIP
+HD2   HSP       1.4090  ! alias added from HD2 HIP
+1HE   HI+       1.3590  ! alias added from HE1 HIP
+1HE   HSP       1.3590  ! alias added from HE1 HIP
+HE1   HI+       1.3590  ! alias added from HE1 HIP
+HE1   HSP       1.3590  ! alias added from HE1 HIP
+2HE   HI+       0.6000  ! alias added from HE2 HIP
+2HE   HSP       0.6000  ! alias added from HE2 HIP
+HE2   HI+       0.6000  ! alias added from HE2 HIP
+HE2   HSP       0.6000  ! alias added from HE2 HIP
+C     HI+       1.9080  ! alias added from C HIP
+C     HSP       1.9080  ! alias added from C HIP
+O     HI+       1.6612  ! alias added from O HIP
+O     HSP       1.6612  ! alias added from O HIP
+N     HDL       1.8240  ! alias added from N HID
+N     HSD       1.8240  ! alias added from N HID
+H     HDL       0.6000  ! alias added from H HID
+H     HSD       0.6000  ! alias added from H HID
+HN    HDL       0.6000  ! alias added from H HID
+HN    HID       0.6000  ! alias added from H HID
+HN    HSD       0.6000  ! alias added from H HID
+CA    HDL       1.9080  ! alias added from CA HID
+CA    HSD       1.9080  ! alias added from CA HID
+HA    HDL       1.3870  ! alias added from HA HID
+HA    HSD       1.3870  ! alias added from HA HID
+CB    HDL       1.9080  ! alias added from CB HID
+CB    HSD       1.9080  ! alias added from CB HID
+2HB   HDL       1.9080  ! alias added from HB2 HID
+2HB   HSD       1.9080  ! alias added from HB2 HID
+HB2   HDL       1.9080  ! alias added from HB2 HID
+HB2   HSD       1.9080  ! alias added from HB2 HID
+3HB   HDL       1.9080  ! alias added from HB3 HID
+3HB   HSD       1.9080  ! alias added from HB3 HID
+HB3   HDL       1.9080  ! alias added from HB3 HID
+HB3   HSD       1.9080  ! alias added from HB3 HID
+CG    HDL       1.9080  ! alias added from CG HID
+CG    HSD       1.9080  ! alias added from CG HID
+1ND   HDL       1.8240  ! alias added from ND1 HID
+1ND   HSD       1.8240  ! alias added from ND1 HID
+ND1   HDL       1.8240  ! alias added from ND1 HID
+ND1   HSD       1.8240  ! alias added from ND1 HID
+1CE   HDL       1.9080  ! alias added from CE1 HID
+1CE   HSD       1.9080  ! alias added from CE1 HID
+CE1   HDL       1.9080  ! alias added from CE1 HID
+CE1   HSD       1.9080  ! alias added from CE1 HID
+2NE   HDL       1.8240  ! alias added from NE2 HID
+2NE   HSD       1.8240  ! alias added from NE2 HID
+NE2   HDL       1.8240  ! alias added from NE2 HID
+NE2   HSD       1.8240  ! alias added from NE2 HID
+2CD   HDL       1.9080  ! alias added from CD2 HID
+2CD   HSD       1.9080  ! alias added from CD2 HID
+CD2   HDL       1.9080  ! alias added from CD2 HID
+CD2   HSD       1.9080  ! alias added from CD2 HID
+1HD   HDL       0.6000  ! alias added from HD1 HID
+1HD   HSD       0.6000  ! alias added from HD1 HID
+HD1   HDL       0.6000  ! alias added from HD1 HID
+HD1   HSD       0.6000  ! alias added from HD1 HID
+2HD   HDL       1.4090  ! alias added from HD2 HID
+2HD   HSD       1.4090  ! alias added from HD2 HID
+HD2   HDL       1.4090  ! alias added from HD2 HID
+HD2   HSD       1.4090  ! alias added from HD2 HID
+1HE   HDL       1.3590  ! alias added from HE1 HID
+1HE   HSD       1.3590  ! alias added from HE1 HID
+HE1   HDL       1.3590  ! alias added from HE1 HID
+HE1   HSD       1.3590  ! alias added from HE1 HID
+2HE   HDL       0.6000  ! alias added from HE2 HID
+2HE   HSD       0.6000  ! alias added from HE2 HID
+HE2   HDL       0.6000  ! alias added from HE2 HID
+HE2   HSD       0.6000  ! alias added from HE2 HID
+C     HDL       1.9080  ! alias added from C HID
+C     HSD       1.9080  ! alias added from C HID
+O     HDL       1.6612  ! alias added from O HID
+O     HSD       1.6612  ! alias added from O HID
+N     HEL       1.8240  ! alias added from N HIE
+N     HSE       1.8240  ! alias added from N HIE
+H     HEL       0.6000  ! alias added from H HIE
+H     HSE       0.6000  ! alias added from H HIE
+HN    HEL       0.6000  ! alias added from H HIE
+HN    HIE       0.6000  ! alias added from H HIE
+HN    HSE       0.6000  ! alias added from H HIE
+CA    HEL       1.9080  ! alias added from CA HIE
+CA    HSE       1.9080  ! alias added from CA HIE
+HA    HEL       1.3870  ! alias added from HA HIE
+HA    HSE       1.3870  ! alias added from HA HIE
+CB    HEL       1.9080  ! alias added from CB HIE
+CB    HSE       1.9080  ! alias added from CB HIE
+2HB   HEL       1.9080  ! alias added from HB2 HIE
+2HB   HSE       1.9080  ! alias added from HB2 HIE
+HB2   HEL       1.9080  ! alias added from HB2 HIE
+HB2   HSE       1.9080  ! alias added from HB2 HIE
+3HB   HEL       1.9080  ! alias added from HB3 HIE
+3HB   HSE       1.9080  ! alias added from HB3 HIE
+HB3   HEL       1.9080  ! alias added from HB3 HIE
+HB3   HSE       1.9080  ! alias added from HB3 HIE
+CG    HEL       1.9080  ! alias added from CG HIE
+CG    HSE       1.9080  ! alias added from CG HIE
+1ND   HEL       1.8240  ! alias added from ND1 HIE
+1ND   HSE       1.8240  ! alias added from ND1 HIE
+ND1   HEL       1.8240  ! alias added from ND1 HIE
+ND1   HSE       1.8240  ! alias added from ND1 HIE
+1CE   HEL       1.9080  ! alias added from CE1 HIE
+1CE   HSE       1.9080  ! alias added from CE1 HIE
+CE1   HEL       1.9080  ! alias added from CE1 HIE
+CE1   HSE       1.9080  ! alias added from CE1 HIE
+2NE   HEL       1.8240  ! alias added from NE2 HIE
+2NE   HSE       1.8240  ! alias added from NE2 HIE
+NE2   HEL       1.8240  ! alias added from NE2 HIE
+NE2   HSE       1.8240  ! alias added from NE2 HIE
+2CD   HEL       1.9080  ! alias added from CD2 HIE
+2CD   HSE       1.9080  ! alias added from CD2 HIE
+CD2   HEL       1.9080  ! alias added from CD2 HIE
+CD2   HSE       1.9080  ! alias added from CD2 HIE
+1HD   HEL       0.6000  ! alias added from HD1 HIE
+1HD   HSE       0.6000  ! alias added from HD1 HIE
+HD1   HEL       0.6000  ! alias added from HD1 HIE
+HD1   HSE       0.6000  ! alias added from HD1 HIE
+2HD   HEL       1.4090  ! alias added from HD2 HIE
+2HD   HSE       1.4090  ! alias added from HD2 HIE
+HD2   HEL       1.4090  ! alias added from HD2 HIE
+HD2   HSE       1.4090  ! alias added from HD2 HIE
+1HE   HEL       1.3590  ! alias added from HE1 HIE
+1HE   HSE       1.3590  ! alias added from HE1 HIE
+HE1   HEL       1.3590  ! alias added from HE1 HIE
+HE1   HSE       1.3590  ! alias added from HE1 HIE
+2HE   HEL       0.6000  ! alias added from HE2 HIE
+2HE   HSE       0.6000  ! alias added from HE2 HIE
+HE2   HEL       0.6000  ! alias added from HE2 HIE
+HE2   HSE       0.6000  ! alias added from HE2 HIE
+C     HEL       1.9080  ! alias added from C HIE
+C     HSE       1.9080  ! alias added from C HIE
+O     HEL       1.6612  ! alias added from O HIE
+O     HSE       1.6612  ! alias added from O HIE
+HN    ILE       0.6000  ! alias added from H ILE
+2CG   ILE       1.9080  ! alias added from CG2 ILE
+1CD   ILE       1.9080  ! alias added from CD1 ILE
+HN    LEU       0.6000  ! alias added from H LEU
+2CD   LEU       1.9080  ! alias added from CD2 LEU
+N     LY+       1.8240  ! alias added from N LYS
+H     LY+       0.6000  ! alias added from H LYS
+HN    LY+       0.6000  ! alias added from H LYS
+HN    LYS       0.6000  ! alias added from H LYS
+CA    LY+       1.9080  ! alias added from CA LYS
+HA    LY+       1.3870  ! alias added from HA LYS
+CB    LY+       1.9080  ! alias added from CB LYS
+1HB   LY+       1.4870  ! alias added from 1HB LYS
+HB1   LY+       1.4870  ! alias added from 1HB LYS
+2HB   LY+       1.4870  ! alias added from 2HB LYS
+HB2   LY+       1.4870  ! alias added from 2HB LYS
+3HB   LY+       1.4870  ! alias added from 3HB LYS
+HB3   LY+       1.4870  ! alias added from 3HB LYS
+CG    LY+       1.9080  ! alias added from CG LYS
+1HG   LY+       1.4870  ! alias added from 1HG LYS
+HG1   LY+       1.4870  ! alias added from 1HG LYS
+2HG   LY+       1.4870  ! alias added from 2HG LYS
+HG2   LY+       1.4870  ! alias added from 2HG LYS
+3HG   LY+       1.4870  ! alias added from 3HG LYS
+HG3   LY+       1.4870  ! alias added from 3HG LYS
+CD    LY+       1.9080  ! alias added from CD LYS
+1HD   LY+       1.4870  ! alias added from 1HD LYS
+HD1   LY+       1.4870  ! alias added from 1HD LYS
+2HD   LY+       1.4870  ! alias added from 2HD LYS
+HD2   LY+       1.4870  ! alias added from 2HD LYS
+3HD   LY+       1.4870  ! alias added from 3HD LYS
+HD3   LY+       1.4870  ! alias added from 3HD LYS
+CE    LY+       1.9080  ! alias added from CE LYS
+1HE   LY+       1.1000  ! alias added from 1HE LYS
+HE1   LY+       1.1000  ! alias added from 1HE LYS
+2HE   LY+       1.1000  ! alias added from 2HE LYS
+HE2   LY+       1.1000  ! alias added from 2HE LYS
+3HE   LY+       1.1000  ! alias added from 3HE LYS
+HE3   LY+       1.1000  ! alias added from 3HE LYS
+NZ    LY+       1.8750  ! alias added from NZ LYS
+1HZ   LY+       0.6000  ! alias added from 1HZ LYS
+HZ1   LY+       0.6000  ! alias added from 1HZ LYS
+2HZ   LY+       0.6000  ! alias added from 2HZ LYS
+HZ2   LY+       0.6000  ! alias added from 2HZ LYS
+3HZ   LY+       0.6000  ! alias added from 3HZ LYS
+HZ3   LY+       0.6000  ! alias added from 3HZ LYS
+C     LY+       1.9080  ! alias added from C LYS
+O     LY+       1.6612  ! alias added from O LYS
+HN    MET       0.6000  ! alias added from H MET
+HN    PHE       0.6000  ! alias added from H PHE
+HN    SER       0.6000  ! alias added from H SER
+HN    THR       0.6000  ! alias added from H THR
+HN    TRP       0.6000  ! alias added from H TRP
+HN    TYR       0.6000  ! alias added from H TYR
+HN    VAL       0.6000  ! alias added from H VAL
+1OP   A         1.6612  ! alias added from OP1 A
+2OP   A         1.6612  ! alias added from OP2 A
+1H6   A         0.6000  ! alias added from H61 A
+2H6   A         0.6000  ! alias added from H62 A
+1N    A         1.8240  ! alias added from N1 A
+2C    A         1.9080  ! alias added from C2 A
+2H    A         1.3590  ! alias added from H2 A
+2HT   A         1.3590  ! alias added from H2 A
+HT2   A         1.3590  ! alias added from H2 A
+3N    A         1.8240  ! alias added from N3 A
+1OP   C         1.6612  ! alias added from OP1 C
+2OP   C         1.6612  ! alias added from OP2 C
+1N    C         1.8240  ! alias added from N1 C
+1H4   C         0.6000  ! alias added from H41 C
+2H4   C         0.6000  ! alias added from H42 C
+3N    C         1.8240  ! alias added from N3 C
+2C    C         1.9080  ! alias added from C2 C
+2O    C         1.6612  ! alias added from O2 C
+1OP   G         1.6612  ! alias added from OP1 G
+2OP   G         1.6612  ! alias added from OP2 G
+1N    G         1.8240  ! alias added from N1 G
+1H    G         0.6000  ! alias added from H1 G
+1HT   G         0.6000  ! alias added from H1 G
+HT1   G         0.6000  ! alias added from H1 G
+2C    G         1.9080  ! alias added from C2 G
+2N    G         1.8240  ! alias added from N2 G
+1H2   G         0.6000  ! alias added from H21 G
+2H2   G         0.6000  ! alias added from H22 G
+3N    G         1.8240  ! alias added from N3 G
+1OP   U         1.6612  ! alias added from OP1 U
+2OP   U         1.6612  ! alias added from OP2 U
+1N    U         1.8240  ! alias added from N1 U
+3N    U         1.8240  ! alias added from N3 U
+3H    U         0.6000  ! alias added from H3 U
+3HT   U         0.6000  ! alias added from H3 U
+HT3   U         0.6000  ! alias added from H3 U
+2C    U         1.9080  ! alias added from C2 U
+2O    U         1.6612  ! alias added from O2 U
+1OP   DT        1.6612  ! alias added from OP1 DT
+2OP   DT        1.6612  ! alias added from OP2 DT
+1N    DT        1.8240  ! alias added from N1 DT
+1H7   DT        1.4870  ! alias added from H71 DT
+2H7   DT        1.4870  ! alias added from H72 DT
+3H7   DT        1.4870  ! alias added from H73 DT
+3N    DT        1.8240  ! alias added from N3 DT
+3H    DT        0.6000  ! alias added from H3 DT
+3HT   DT        0.6000  ! alias added from H3 DT
+HT3   DT        0.6000  ! alias added from H3 DT
+2C    DT        1.9080  ! alias added from C2 DT
+2O    DT        1.6612  ! alias added from O2 DT
+1OP   DG        1.6612  ! alias added from OP1 DG
+2OP   DG        1.6612  ! alias added from OP2 DG
+1N    DG        1.8240  ! alias added from N1 DG
+1H    DG        0.6000  ! alias added from H1 DG
+1HT   DG        0.6000  ! alias added from H1 DG
+HT1   DG        0.6000  ! alias added from H1 DG
+2C    DG        1.9080  ! alias added from C2 DG
+2N    DG        1.8240  ! alias added from N2 DG
+1H2   DG        0.6000  ! alias added from H21 DG
+2H2   DG        0.6000  ! alias added from H22 DG
+3N    DG        1.8240  ! alias added from N3 DG
+1OP   DC        1.6612  ! alias added from OP1 DC
+2OP   DC        1.6612  ! alias added from OP2 DC
+1N    DC        1.8240  ! alias added from N1 DC
+1H4   DC        0.6000  ! alias added from H41 DC
+2H4   DC        0.6000  ! alias added from H42 DC
+3N    DC        1.8240  ! alias added from N3 DC
+2C    DC        1.9080  ! alias added from C2 DC
+2O    DC        1.6612  ! alias added from O2 DC
+1OP   DA        1.6612  ! alias added from OP1 DA
+2OP   DA        1.6612  ! alias added from OP2 DA
+1H6   DA        0.6000  ! alias added from H61 DA
+2H6   DA        0.6000  ! alias added from H62 DA
+1N    DA        1.8240  ! alias added from N1 DA
+2C    DA        1.9080  ! alias added from C2 DA
+2H    DA        1.3590  ! alias added from H2 DA
+2HT   DA        1.3590  ! alias added from H2 DA
+HT2   DA        1.3590  ! alias added from H2 DA
+3N    DA        1.8240  ! alias added from N3 DA

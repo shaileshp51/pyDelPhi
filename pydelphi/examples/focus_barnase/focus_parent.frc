@@ -1,0 +1,34 @@
+# DELPHI SITE POTENTIAL FILE
+# grid_size: [157 157 157]
+# percent_fill: 52.513
+# dielectric_model: DielectricModel.TWODIELECTRIC
+# surface_method: SurfaceMethod.VDW
+# exdi: 80.00
+# indi: 1.00
+# ionic_strength_M: 0.15
+# ion_exclusion_radius: 2.0
+# probe_radius_1: 1.4
+# probe_radius_2: 1.4
+# total_iters: 250
+# final_rms: 7.864e-08
+# final_dphi: 2.067e-06
+# convergence_status: CONVERGED_THRESH
+# boundary_condition: BoundaryCondition.COULOMBIC
+# data_output: COORDINATES CHARGE POTENTIALS FIELDS
+# title: frc map
+# GRID_PHI = grid electrostatic potential interpolated at the evaluation point
+# GF_EX/GF_EY/GF_EZ = grid electric field components interpolated at the evaluation point
+           X           Y           Z      CHARGE    GRID_PHI       GF_EX       GF_EY       GF_EZ
+     29.9470     39.6750      6.3780     -0.5163      2.7265      0.2003     -0.2565     -0.1529
+     29.7730     40.0120      7.7810      0.0381      3.2094      0.1769     -0.3669     -0.3663
+     31.1110     39.9110      8.5020      0.5366      3.0480      0.3645     -0.3339     -0.3423
+     31.4580     40.7890      9.2890     -0.5819      3.4876      0.5492     -0.3030     -0.4180
+     28.6930     39.1490      8.4690     -0.0303      3.2963      0.0237     -0.3845     -0.5292
+     28.4300     39.6500      9.8870      0.7994      4.8341      0.3738     -0.5289     -1.3096
+     28.0630     40.8220     10.2130     -0.8014      6.4052      0.7391      1.4150      5.0439
+     28.6280     38.7580     10.7460     -0.8014      5.0204      1.4054     -1.2354     -0.5113
+     29.4370     38.8810      5.9120      0.2936      2.5897      0.1962     -0.2304     -0.0445
+     29.4870     40.9720      7.8260      0.0880      3.6774      0.1608     -0.5043     -0.4370
+     29.0250     38.2270      8.5130     -0.0122      2.8684      0.1200     -0.5162     -0.2952
+     27.8660     39.2260      7.9460     -0.0122      2.9680     -0.3018     -0.1642     -0.3602
+# Total electrostatic energy = -3.0292 kT

@@ -1,0 +1,20 @@
+scale=4.0
+grid_size=65
+
+indi=1.0
+exdi=80.0
+salt=0.15
+prbrad=1.4
+
+bndcon=focusing !3 
+maxc=0.00001
+
+in(modpdb4, file="{EXAMPLE_DIR}/barnase-plus-probe.pqr", format=pqr)
+in(phi, file="{PARENT_PHI_FILE}", format=phi)
+
+select(name="BARNASE", cond="chain A")
+select(name="ASP139", cond="resname ASP and resid 139 and chain B")
+
+acenter(sel="ASP139")
+frc(source="BARNASE", target="ASP139", tmode="ignore", outfile="{OUTPUT_FILE}")
+site(a,q,p,f)

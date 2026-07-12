@@ -1,0 +1,6 @@
+! custom size file for frc_analytical
+! N3 is included for assignment completeness; tmode="ignore" removes it from the source model
+atom__resnumbc_radius_
+N1    SRC       0.100
+N2    SRC       0.100
+N3    TGT       0.100

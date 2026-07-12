@@ -66,7 +66,7 @@ def parse_arguments():
     verbosity_choices = tuple(v.lower() for v in VerbosityLevel.list())
 
     parser = argparse.ArgumentParser(
-        prog="pydelphi_static.py",
+        prog="pydelphi-static",
         description="Run pydelphi for a single coordinate set (static PBE calculation).",
     )
 

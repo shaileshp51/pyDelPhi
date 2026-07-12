@@ -1,42 +1,46 @@
-example	bio_model	dielectric_model	surface_method	solver	boundary_condition	salt	indi	exdi	gapdi	gaussian_exponent	density_cutoff	gaussian_sigma	acenter	probe_residue	site	is_non_linear	scale	grid_size	E_rxn_corr_tot	E_grid_tot	E_coul	E_stress	E_osmotic	E_grid_nl_tot	E_total_probe
-sphere	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.4	0	NA	NA		NA
-sphere	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.4	0	NA	NA		NA
-sphere	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.12	0	NA	NA		NA
-sphere	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1691.91	0	NA	NA		NA
-twoatoms	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.58	-35.15	NA	NA		NA
-twoatoms	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.58	-35.15	NA	NA		NA
-twoatoms	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.57	-35.15	NA	NA		NA
-twoatoms	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.49	-35.15	NA	NA		NA
-arg	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.46	-1708.9	NA	NA		NA
-arg	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.46	-1708.9	NA	NA		NA
-arg	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.19	-1708.9	NA	NA		NA
-arg	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.65	2977.95	-1708.9	NA	NA		NA
-5tif	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3454.94	202728.02	-96224.56	NA	NA		NA
-5tif	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3454.89	202728.22	-96224.56	NA	NA		NA
-5tif	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3455.61	202725.63	-96224.56	NA	NA		NA
-5tif	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3457.28	202720.46	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussiancutoff	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6195.03	-6195.03	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6205.8	-6205.8	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6218.79	-6218.79	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6273.29	-6273.29	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussian	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4690.38	-4690.38	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussian	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4699.63	-4699.63	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussian	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4706.22	-4706.22	-96224.56	NA	NA		NA
-5tif	pbe	gaussian	gaussian	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4729.12	-4729.12	-96224.56	NA	NA		NA
-5tif	rpbe	gaussian	gaussian	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3242.82	-3242.82	-96224.56	NA	NA		NA
-5tif	rpbe	gaussian	gaussian	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3242.82	-3242.82	-96224.56	NA	NA		NA
-5tif	rpbe	gaussian	gaussian	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3252.88	-3252.88	-96224.56	NA	NA		NA
-5tif	rpbe	gaussian	gaussian	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3287	-3287	-96224.56	NA	NA		NA
-barnase	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2061.45	122993.37	-56935.76	NA	NA		NA
-barnase	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2061.37	122993.71	-56935.76	NA	NA		NA
-barnase	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2062.08	122991.35	-56935.76	NA	NA		NA
-barnase	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2063.77	122987.42	-56935.76	NA	NA		NA
-barnase	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2062.28	122990.97	-56935.76	-1.29	1.1		NA
-barnase	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2063.89	122987.21	-56935.76	-1.75	1.65		NA
-barnase	pbe	twodielectric	vdw	sor	focus	0.15	1	80	NA	NA	NA	NA	29.3265,39.6727,8.45517	ASN139	a,p,q,f	FALSE	4	65	NA	NA	NA	NA	NA	NA	-2.81044
-barnase	pbe	twodielectric	vdw	nwt	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2062.23	122991.44	-56935.76	-1.21	1.05		NA
-barnase	pbe	twodielectric	vdw	nwt	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2063.88	122987.83	-56935.76	-1.76	1.66		NA
-1he8	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25663.62	332341.13	-577236.86	NA	NA		NA
-1he8	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25663.46	332341.49	-577236.86	NA	NA		NA
-1he8	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25680.01	332284.52	-577236.86	NA	NA		NA
-1he8	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25705.3	332234.55	-577236.86	NA	NA		NA
+example	bio_model	dielectric_model	surface_method	solver	boundary_condition	salt	indi	exdi	gapdi	gaussian_exponent	density_cutoff	gaussian_sigma	acenter	probe_residue	site	is_non_linear	scale	grid_size	E_rxn_corr_tot	E_grid_tot	E_coul	E_stress	E_osmotic	E_grid_nl_tot	E_total_probe	parm_files	output_ref_file	testcase_rtol	testcase_atol	disabled
+sphere	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.4	0	NA	NA		NA	NA	NA	NA	NA	FALSE
+sphere	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.4	0	NA	NA		NA	NA	NA	NA	NA	FALSE
+sphere	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1692.12	0	NA	NA		NA	NA	NA	NA	NA	FALSE
+sphere	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-92.55	1691.91	0	NA	NA		NA	NA	NA	NA	NA	FALSE
+twoatoms	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.58	-35.15	NA	NA		NA	NA	NA	NA	NA	FALSE
+twoatoms	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.58	-35.15	NA	NA		NA	NA	NA	NA	NA	FALSE
+twoatoms	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.57	-35.15	NA	NA		NA	NA	NA	NA	NA	FALSE
+twoatoms	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	95	-58.17	513.49	-35.15	NA	NA		NA	NA	NA	NA	NA	FALSE
+arg	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.46	-1708.9	NA	NA		NA	NA	NA	NA	NA	FALSE
+arg	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.46	-1708.9	NA	NA		NA	NA	NA	NA	NA	FALSE
+arg	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.63	2978.19	-1708.9	NA	NA		NA	NA	NA	NA	NA	FALSE
+arg	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	101	-134.65	2977.95	-1708.9	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3454.94	202728.02	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3454.89	202728.22	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3455.61	202725.63	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	139	-3457.28	202720.46	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2061.45	122993.37	-56935.76	NA	NA		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2061.37	122993.71	-56935.76	NA	NA		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2062.08	122991.35	-56935.76	NA	NA		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	2	137	-2063.77	122987.42	-56935.76	NA	NA		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2062.28	122990.97	-56935.76	-1.29	1.1		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2063.89	122987.21	-56935.76	-1.75	1.65		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	nwt	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2062.23	122991.44	-56935.76	-1.21	1.05		NA	NA	NA	NA	NA	FALSE
+barnase	pbe	twodielectric	vdw	nwt	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	TRUE	2	137	-2063.88	122987.83	-56935.76	-1.76	1.66		NA	NA	NA	NA	NA	FALSE
+1he8	pbe	twodielectric	vdw	sor	dipolar	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25663.62	332341.13	-577236.86	NA	NA		NA	NA	NA	NA	NA	FALSE
+1he8	pbe	twodielectric	vdw	sor	coulombic	0	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25663.46	332341.49	-577236.86	NA	NA		NA	NA	NA	NA	NA	FALSE
+1he8	pbe	twodielectric	vdw	sor	coulombic	0.15	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25680.01	332284.52	-577236.86	NA	NA		NA	NA	NA	NA	NA	FALSE
+1he8	pbe	twodielectric	vdw	sor	coulombic	2	1	80	NA	NA	NA	NA	NA	NA	NA	FALSE	1	163	-25705.3	332234.55	-577236.86	NA	NA		NA	NA	NA	NA	NA	FALSE
+frc_analytical	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	param_pqr.prm	pqr.ref.frc	0.01	0.001	FALSE
+frc_analytical	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	param_pdb_crgsiz.prm	pdb_crgsiz.ref.frc	0.01	0.001	FALSE
+focus_barnase	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	param_parent.prm AND param_child.prm	focus.ref.frc	0.01	0.001	FALSE
+zeta_sphere	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	param_zeta.prm	zeta_8A.ref.zphi	0.01	0.001	FALSE
+zeta_lysozyme	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	NA	param_zeta.prm	zeta_4A.ref.zphi	0.01	0.001	FALSE
+5tif	pbe	gaussian	gaussiancutoff	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6195.03	-6195.03	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6205.8	-6205.8	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6218.79	-6218.79	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussiancutoff	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-6273.29	-6273.29	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussian	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4690.38	-4690.38	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussian	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4699.63	-4699.63	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussian	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4706.22	-4706.22	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	pbe	gaussian	gaussian	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-4729.12	-4729.12	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	rpbe	gaussian	gaussian	sor	dipolar	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3242.82	-3242.82	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	rpbe	gaussian	gaussian	sor	coulombic	0	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3242.82	-3242.82	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	rpbe	gaussian	gaussian	sor	coulombic	0.15	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3252.88	-3252.88	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE
+5tif	rpbe	gaussian	gaussian	sor	coulombic	2	1	80	22	2	0.759	1	NA	NA	NA	FALSE	2	139	-3287	-3287	-96224.56	NA	NA		NA	NA	NA	NA	NA	FALSE

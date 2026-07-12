@@ -18,6 +18,7 @@
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
 
+from sys import exit as sys_exit
 from pydelphi.site.site import *
 from pydelphi.utils.interpolation import *
 from pydelphi.site.siteexceptions import *
@@ -32,7 +33,7 @@ from pydelphi.config.global_runtime import (
     vprint,
 )
 
-from pydelphi.config.logging_config import INFO, DEBUG, get_effective_verbosity
+from pydelphi.config.logging_config import INFO, DEBUG, ERROR, get_effective_verbosity
 
 _MODULE_NAME = __name__
 _VERBOSITY = get_effective_verbosity(_MODULE_NAME)
@@ -75,63 +76,133 @@ def find_record(atm, res, rnum, chn, file_type, value):
     pass
 
 
+# def _write_text_frc_header(
+#     outfile_stream,
+#     grid_shape,
+#     percent_fill,
+#     external_dielectric,
+#     media_epsilons,
+#     gap_dielectric,
+#     dielectric_model,
+#     surface_method,
+#     ion_strength,
+#     ion_radius,
+#     probe_radius,
+#     total_iters,
+#     final_rms,
+#     final_dphi,
+#     convergence_status,
+#     boundary_condition,
+#     datum,
+#     map_title,
+#     vrow,
+# ):
+#     """Writes the header for a text format FRC file."""
+#     outfile_stream.write("DELPHI SITE POTENTIAL FILE\n")
+#     outfile_stream.write(
+#         f"grid size, percent fill:   {grid_shape}    {percent_fill:.3f}\n"
+#     )
+#     internal_epsilon_first = (
+#         media_epsilons[1]
+#         if (media_epsilons is not None) and len(media_epsilons) > 1
+#         else 1.0
+#     )
+#     outfile_stream.write(
+#         "outer diel. and first one assigned :   "
+#         f"{external_dielectric:.2f}    "
+#         f"{internal_epsilon_first:.2f}\n"
+#     )
+#     outfile_stream.write(f"ionic strength (M):   {ion_strength}\n")
+#
+#     if isinstance(probe_radius, (list, tuple, np.ndarray)):
+#         probe_radius_1 = probe_radius[0] if len(probe_radius) > 0 else 1.4
+#         probe_radius_2 = probe_radius[1] if len(probe_radius) > 1 else probe_radius_1
+#     elif isinstance(probe_radius, (int, float)):
+#         probe_radius_1 = probe_radius
+#         probe_radius_2 = probe_radius_1
+#     else:
+#         probe_radius_1 = 0.0
+#         probe_radius_2 = 0.0
+#
+#     outfile_stream.write(
+#         f"ion excl., probe radii:   {ion_radius}    {probe_radius_1}    {probe_radius_2}\n"
+#     )
+#
+#     outfile_stream.write(
+#         f"linear, nolinear iterations:   {linear_iteration_num}    {non_linear_iteration_num}\n"
+#     )
+#     outfile_stream.write(f"boundary condition:   {boundary_condition}\n")
+#     outfile_stream.write(f"Data Output:   {datum}\n")
+#     outfile_stream.write(f"title: {map_title}\n")
+#     outfile_stream.write("\n\n")
+#     outfile_stream.write(f"{vrow}\n")
+
+
 def _write_text_frc_header(
     outfile_stream,
     grid_shape,
     percent_fill,
     external_dielectric,
     media_epsilons,
-    epkt_value,
+    gap_dielectric,
+    dielectric_model,
+    surface_method,
     ion_strength,
     ion_radius,
     probe_radius,
-    linear_iteration_num,
-    non_linear_iteration_num,
+    total_iters,
+    final_rms,
+    final_dphi,
+    convergence_status,
     boundary_condition,
     datum,
     map_title,
     vrow,
 ):
     """Writes the header for a text format FRC file."""
-    outfile_stream.write("DELPHI SITE POTENTIAL FILE\n")
-    outfile_stream.write(
-        f"grid size, percent fill:   {grid_shape}    {percent_fill:.3f}\n"
-    )
+
     internal_epsilon_first = (
         media_epsilons[1]
         if (media_epsilons is not None) and len(media_epsilons) > 1
         else 1.0
     )
-    outfile_stream.write(
-        "outer diel. and first one assigned :   "
-        f"{external_dielectric:.2f}    "
-        f"{internal_epsilon_first:.2f}\n"
-    )
-    outfile_stream.write(f"ionic strength (M):   {ion_strength}\n")
 
     if isinstance(probe_radius, (list, tuple, np.ndarray)):
         probe_radius_1 = probe_radius[0] if len(probe_radius) > 0 else 1.4
         probe_radius_2 = probe_radius[1] if len(probe_radius) > 1 else probe_radius_1
     elif isinstance(probe_radius, (int, float)):
         probe_radius_1 = probe_radius
-        probe_radius_2 = (
-            probe_radius_1  # Or decide what the second radius should be for scalar case
-        )
+        probe_radius_2 = probe_radius_1
     else:
         probe_radius_1 = 0.0
         probe_radius_2 = 0.0
 
+    outfile_stream.write("# DELPHI SITE POTENTIAL FILE\n")
+    outfile_stream.write(f"# grid_size: {grid_shape}\n")
+    outfile_stream.write(f"# percent_fill: {percent_fill:.3f}\n")
+    outfile_stream.write(f"# dielectric_model: {dielectric_model}\n")
+    outfile_stream.write(f"# surface_method: {surface_method}\n")
+    outfile_stream.write(f"# exdi: {external_dielectric:.2f}\n")
+    outfile_stream.write(f"# indi: {internal_epsilon_first:.2f}\n")
+    if gap_dielectric is not None:
+        outfile_stream.write(f"# gapdi: {gap_dielectric:.2f}\n")
+    outfile_stream.write(f"# ionic_strength_M: {ion_strength}\n")
+    outfile_stream.write(f"# ion_exclusion_radius: {ion_radius}\n")
+    outfile_stream.write(f"# probe_radius_1: {probe_radius_1}\n")
+    outfile_stream.write(f"# probe_radius_2: {probe_radius_2}\n")
+    outfile_stream.write(f"# total_iters: {total_iters}\n")
+    outfile_stream.write(f"# final_rms: {final_rms:.3e}\n")
+    outfile_stream.write(f"# final_dphi: {final_dphi:.3e}\n")
+    outfile_stream.write(f"# convergence_status: {convergence_status}\n")
+    outfile_stream.write(f"# boundary_condition: {boundary_condition}\n")
+    outfile_stream.write(f"# data_output: {datum}\n")
+    outfile_stream.write(f"# title: {map_title}\n")
     outfile_stream.write(
-        f"ion excl., probe radii:   {ion_radius}    {probe_radius_1}    {probe_radius_2}\n"
+        "# GRID_PHI = grid electrostatic potential interpolated at the evaluation point\n"
     )
-
     outfile_stream.write(
-        f"linear, nolinear iterations:   {linear_iteration_num}    {non_linear_iteration_num}\n"
+        "# GF_EX/GF_EY/GF_EZ = grid electric field components interpolated at the evaluation point\n"
     )
-    outfile_stream.write(f"boundary condition:   {boundary_condition}\n")
-    outfile_stream.write(f"Data Output:   {datum}\n")
-    outfile_stream.write(f"title: {map_title}\n")
-    outfile_stream.write("\n\n")
     outfile_stream.write(f"{vrow}\n")
 
 
@@ -375,6 +446,98 @@ def _calculate_reaction_potential_only(
     return reaction_potential
 
 
+# def _write_output_values(
+#     output_file_stream,
+#     out_react_pot,
+#     out_coulomb_pot,
+#     out_atom_pot,
+#     out_debye_frac,
+#     out_field,
+#     out_surf_charge,
+#     out_total_force,
+#     out_react_force,
+#     out_coulomb_force,
+#     out_total_pot,
+#     out_atom_desc,
+#     out_atom_coords,
+#     out_charge,
+#     out_grid_pot,
+#     out_salt,
+#     epkt_value,
+#     reaction_potential,
+#     coulomb_potential,
+#     atom_potential_value,
+#     debye_fraction,
+#     field_xyz,
+#     total_surface_charge_value,
+#     atom_coords,
+#     surface_potential_term,
+#     total_force_xyz,
+#     reaction_force_xyz,
+#     coulomb_force_xyz,
+#     total_potential,
+#     atom_descriptor,
+#     charge_value,
+#     potential_value,
+#     salt_concentration,
+# ):
+#     """Writes output values in formatted text mode."""
+#     if out_atom_desc and atom_descriptor is not None:
+#         output_file_stream.write(f"{atom_descriptor}")
+#     if out_atom_coords and atom_coords is not None:
+#         output_file_stream.write(
+#             f"{atom_coords[0]:10.4f}{atom_coords[1]:10.4f}{atom_coords[2]:10.4f}"
+#         )
+#     if out_charge and charge_value is not None:
+#         output_file_stream.write(f"{charge_value:10.4f}")
+#
+#     # print("site: 432>>> ", potential_value)
+#     if out_grid_pot and potential_value is not None:
+#         output_file_stream.write(f"{potential_value:10.4f}")
+#     if out_salt and salt_concentration is not None:
+#         output_file_stream.write(f"{salt_concentration:10.4f}")
+#     if out_react_pot and reaction_potential is not None:
+#         output_file_stream.write(f"{reaction_potential:10.4f}")
+#     if out_coulomb_pot and coulomb_potential is not None:
+#         output_file_stream.write(f"{coulomb_potential:10.4f}")
+#     if out_atom_pot and atom_potential_value is not None:
+#         output_file_stream.write(f"{atom_potential_value:10.4f}")
+#
+#     if out_debye_frac and debye_fraction is not None:
+#         output_file_stream.write(f"{debye_fraction:10.4f}")
+#     if out_field and field_xyz is not None:
+#         output_file_stream.write(
+#             f"{field_xyz[0]:10.4f}{field_xyz[1]:10.4f}{field_xyz[2]:10.4f}"
+#         )
+#
+#     if out_react_force and reaction_force_xyz is not None:
+#         output_file_stream.write(
+#             f"{reaction_force_xyz[0]:10.4f}{reaction_force_xyz[1]:10.4f}{reaction_force_xyz[2]:10.4f}"
+#         )
+#     if out_coulomb_force and coulomb_force_xyz is not None:
+#         output_file_stream.write(
+#             f"{coulomb_force_xyz[0]:10.4f}{coulomb_force_xyz[1]:10.4f}{coulomb_force_xyz[2]:10.4f}"
+#         )
+#     if out_total_force and total_force_xyz is not None:
+#         output_file_stream.write(
+#             f"{total_force_xyz[0]:10.4f}{total_force_xyz[1]:10.4f}{total_force_xyz[2]:10.4f}"
+#         )
+#
+#     if out_total_pot and total_potential is not None:
+#         output_file_stream.write(f"{total_potential:10.4f}")
+#
+#     if (
+#         out_surf_charge
+#         and total_surface_charge_value is not None
+#         and atom_coords is not None
+#         and surface_potential_term is not None
+#     ):
+#         output_file_stream.write(
+#             f"{total_surface_charge_value:10.4f} {atom_coords[0]:10.4f} {atom_coords[1]:10.4f} {atom_coords[2]:10.4f} {surface_potential_term:10.4f} {surface_potential_term / epkt_value:10.4f}"
+#         )
+#     output_file_stream.write("\n")
+
+
 def _write_output_values(
     output_file_stream,
     out_react_pot,
@@ -410,46 +573,72 @@ def _write_output_values(
     potential_value,
     salt_concentration,
 ):
-    """Writes output values in formatted text mode."""
+    """Writes one row of formatted text FRC output.
+
+    Column widths mirror _setup_output_header_strings():
+      ATOM/RESNAME/CHAIN/RESID : 35 chars total
+      coordinates              : 3 x 12 chars
+      scalar potentials/charge : mostly 10 chars
+      SALT_CONC                : 12 chars
+      DEBYE_FRAC               : 14 chars
+      vector fields/forces     : 3 x 10 chars
+      surface-charge block     : 6 x 12 chars
+    """
     if out_atom_desc and atom_descriptor is not None:
-        output_file_stream.write(f"{atom_descriptor}")
+        output_file_stream.write(f"{atom_descriptor:<35.35s}")
+
     if out_atom_coords and atom_coords is not None:
         output_file_stream.write(
-            f"{atom_coords[0]:10.4f}{atom_coords[1]:10.4f}{atom_coords[2]:10.4f}"
+            f"{atom_coords[0]:12.4f}"
+            f"{atom_coords[1]:12.4f}"
+            f"{atom_coords[2]:12.4f}"
         )
-    if out_charge and charge_value is not None:
-        output_file_stream.write(f"{charge_value:10.4f}")
 
-    # print("site: 432>>> ", potential_value)
+    if out_charge and charge_value is not None:
+        output_file_stream.write(f"{charge_value:12.4f}")
+
     if out_grid_pot and potential_value is not None:
-        output_file_stream.write(f"{potential_value:10.4f}")
+        output_file_stream.write(f"{potential_value:12.4f}")
+
     if out_salt and salt_concentration is not None:
-        output_file_stream.write(f"{salt_concentration:10.4f}")
+        output_file_stream.write(f"{salt_concentration:12.4f}")
+
     if out_react_pot and reaction_potential is not None:
-        output_file_stream.write(f"{reaction_potential:10.4f}")
+        output_file_stream.write(f"{reaction_potential:12.4f}")
+
     if out_coulomb_pot and coulomb_potential is not None:
-        output_file_stream.write(f"{coulomb_potential:10.4f}")
+        output_file_stream.write(f"{coulomb_potential:12.4f}")
+
     if out_atom_pot and atom_potential_value is not None:
-        output_file_stream.write(f"{atom_potential_value:10.4f}")
+        output_file_stream.write(f"{atom_potential_value:12.4f}")
 
     if out_debye_frac and debye_fraction is not None:
-        output_file_stream.write(f"{debye_fraction:10.4f}")
+        output_file_stream.write(f"{debye_fraction:14.4f}")
+
     if out_field and field_xyz is not None:
         output_file_stream.write(
-            f"{field_xyz[0]:10.4f}{field_xyz[1]:10.4f}{field_xyz[2]:10.4f}"
+            f"{field_xyz[0]:12.4f}" f"{field_xyz[1]:12.4f}" f"{field_xyz[2]:12.4f}"
         )
 
     if out_react_force and reaction_force_xyz is not None:
         output_file_stream.write(
-            f"{reaction_force_xyz[0]:10.4f}{reaction_force_xyz[1]:10.4f}{reaction_force_xyz[2]:10.4f}"
+            f"{reaction_force_xyz[0]:12.4f}"
+            f"{reaction_force_xyz[1]:12.4f}"
+            f"{reaction_force_xyz[2]:12.4f}"
         )
+
     if out_coulomb_force and coulomb_force_xyz is not None:
         output_file_stream.write(
-            f"{coulomb_force_xyz[0]:10.4f}{coulomb_force_xyz[1]:10.4f}{coulomb_force_xyz[2]:10.4f}"
+            f"{coulomb_force_xyz[0]:12.4f}"
+            f"{coulomb_force_xyz[1]:12.4f}"
+            f"{coulomb_force_xyz[2]:12.4f}"
         )
+
     if out_total_force and total_force_xyz is not None:
         output_file_stream.write(
-            f"{total_force_xyz[0]:10.4f}{total_force_xyz[1]:10.4f}{total_force_xyz[2]:10.4f}"
+            f"{total_force_xyz[0]:12.4f}"
+            f"{total_force_xyz[1]:12.4f}"
+            f"{total_force_xyz[2]:12.4f}"
         )
 
     if out_total_pot and total_potential is not None:
@@ -462,9 +651,352 @@ def _write_output_values(
         and surface_potential_term is not None
     ):
         output_file_stream.write(
-            f"{total_surface_charge_value:10.4f} {atom_coords[0]:10.4f} {atom_coords[1]:10.4f} {atom_coords[2]:10.4f} {surface_potential_term:10.4f} {surface_potential_term / epkt_value:10.4f}"
+            f"{total_surface_charge_value:12.4f}"
+            f"{atom_coords[0]:12.4f}"
+            f"{atom_coords[1]:12.4f}"
+            f"{atom_coords[2]:12.4f}"
+            f"{surface_potential_term:12.4f}"
+            f"{surface_potential_term / epkt_value:12.4f}"
         )
+
     output_file_stream.write("\n")
+
+
+# def _setup_output_header_strings(
+#     out_atom_desc,
+#     out_atom_coords,
+#     out_charge,
+#     out_grid_pot,
+#     out_salt,
+#     out_react_pot,
+#     out_coulomb_pot,
+#     out_atom_pot,
+#     out_debye_frac,
+#     out_field,
+#     out_surf_charge,
+#     out_total_force,
+#     out_react_force,
+#     out_coulomb_force,
+#     out_total_pot,
+# ):
+#     """Sets up the column/datum header strings for output frc file based on output flags."""
+#     frc_header = " " * 80
+#     datum = " " * 65
+#     j = 0
+#     k = 0
+#     output_columns_flags = [
+#         (out_atom_desc, "ATOM DESCRIPTOR", "ATOM ", 20, 5, 15),
+#         (
+#             out_atom_coords,
+#             "ATOM COORDINATES (X,Y,Z)",
+#             "COORDINATES ",
+#             30,
+#             12,
+#             24,
+#         ),
+#         (out_charge, "CHARGE", "CHARGE ", 10, 7, 6),
+#         (out_grid_pot, "GRID_PHI", "POTENTIALS ", 10, 11, 8),
+#         (out_salt, "SALT_CONC", "SALT ", 10, 5, 8),
+#         (out_react_pot, " REAC._PHI", "REACTION ", 10, 9, 10),
+#         (out_coulomb_pot, " COUL._PHI", "COULOMBIC ", 10, 10, 10),
+#         (out_atom_pot, "ATOM_PHI", "ATOMIC PT. ", 10, 11, 8),
+#         (out_debye_frac, "DEBFRACTION", "DEBFRACTION ", 14, 12, 11),
+#         (out_field, "GRID FIELDS: (Ex, Ey, Ez)", "FIELDS ", 30, 7, 25),
+#         (out_react_force, "REAC. FORCE: (Rx, Ry, Rz)", "RFORCE ", 30, 7, 25),
+#         (out_coulomb_force, "COUL. FORCE: (Cx, Cy, Cz)", "CFORCE ", 30, 7, 25),
+#         (out_total_force, "TOTAL FORCE: (Tx, Ty, Tz)", "TFORCE ", 30, 7, 25),
+#         (out_total_pot, " TOTAL", "TOTAL ", 10, 6, 6),
+#         (
+#             out_surf_charge,
+#             "sCharge,    x          y       z       surf.E°n,surf. E[kT/(qA)]",
+#             "SCh, x, y, z, surf En, surf. E",
+#             50,
+#             35,
+#             65,
+#         ),
+#     ]
+#
+#     for (
+#         flag,
+#         column_name,
+#         datum_name,
+#         column_start_index,
+#         datum_start_index,
+#         column_len,
+#     ) in output_columns_flags:
+#         if flag:
+#             frc_header = frc_header[:j] + column_name + frc_header[j + column_len :]
+#             datum = datum[:k] + datum_name + datum[k + datum_start_index :]
+#             j += column_start_index
+#             k += datum_start_index
+#         if (
+#             j >= 80
+#             and (
+#                 out_react_pot
+#                 or out_coulomb_pot
+#                 or out_atom_pot
+#                 or out_debye_frac
+#                 or out_field
+#                 or out_surf_charge
+#                 or out_total_force
+#                 or out_react_force
+#                 or out_coulomb_force
+#                 or out_total_pot
+#             )
+#             and flag not in [out_surf_charge]
+#         ):
+#             out_react_pot = out_coulomb_pot = out_atom_pot = out_debye_frac = (
+#                 out_field
+#             ) = out_surf_charge = out_total_force = out_react_force = (
+#                 out_coulomb_force
+#             ) = out_total_pot = False
+#         if (
+#             j >= 60
+#             and flag
+#             in [
+#                 out_field,
+#                 out_react_force,
+#                 out_coulomb_force,
+#                 out_total_force,
+#             ]
+#             and (
+#                 out_field
+#                 or out_surf_charge
+#                 or out_total_force
+#                 or out_react_force
+#                 or out_coulomb_force
+#                 or out_total_pot
+#             )
+#         ):
+#             out_field = out_surf_charge = out_total_force = out_react_force = (
+#                 out_coulomb_force
+#             ) = out_total_pot = False
+#         if j >= 70 and flag is out_total_pot and out_total_pot:
+#             out_total_pot = False
+#         if j >= 50 and flag is out_surf_charge and out_surf_charge:
+#             out_surf_charge = False
+#
+#     # print("datum:>>>", datum)
+#     return frc_header, datum
+
+# def _setup_output_header_strings(
+#     out_atom_desc,
+#     out_atom_coords,
+#     out_charge,
+#     out_grid_pot,
+#     out_salt,
+#     out_react_pot,
+#     out_coulomb_pot,
+#     out_atom_pot,
+#     out_debye_frac,
+#     out_field,
+#     out_surf_charge,
+#     out_total_force,
+#     out_react_force,
+#     out_coulomb_force,
+#     out_total_pot,
+# ):
+#     """Sets up column/datum header strings for text FRC output.
+#
+#     The table header uses parser-friendly column names:
+#       - atom descriptor is split into ATOM / RESNAME / CHAIN / RESID
+#       - potential columns use *_PHI
+#       - grid electric field columns use GF_E*
+#       - force columns use *_F*
+#     """
+#     frc_header = " " * 120
+#     datum = " " * 80
+#     j = 0
+#     k = 0
+#
+#     output_columns_flags = [
+#         (
+#             out_atom_desc,
+#             "ATOM    RESNAME    CHAIN    RESID",
+#             "ATOM ",
+#             35,
+#             5,
+#             31,
+#         ),
+#         (
+#             out_atom_coords,
+#             "X          Y          Z",
+#             "COORDINATES ",
+#             36,
+#             12,
+#             30,
+#         ),
+#         (
+#             out_charge,
+#             "CHARGE",
+#             "CHARGE ",
+#             10,
+#             7,
+#             6,
+#         ),
+#         (
+#             out_grid_pot,
+#             "GRID_PHI",
+#             "POTENTIALS ",
+#             10,
+#             11,
+#             8,
+#         ),
+#         (
+#             out_salt,
+#             "SALT_CONC",
+#             "SALT ",
+#             12,
+#             5,
+#             9,
+#         ),
+#         (
+#             out_react_pot,
+#             "RXN_PHI",
+#             "REACTION ",
+#             10,
+#             9,
+#             7,
+#         ),
+#         (
+#             out_coulomb_pot,
+#             "COUL_PHI",
+#             "COULOMBIC ",
+#             10,
+#             10,
+#             8,
+#         ),
+#         (
+#             out_atom_pot,
+#             "ATOM_PHI",
+#             "ATOMIC PT. ",
+#             10,
+#             11,
+#             8,
+#         ),
+#         (
+#             out_debye_frac,
+#             "DEBYE_FRAC",
+#             "DEBFRACTION ",
+#             14,
+#             12,
+#             10,
+#         ),
+#         (
+#             out_field,
+#             "GF_EX     GF_EY     GF_EZ",
+#             "FIELDS ",
+#             30,
+#             7,
+#             25,
+#         ),
+#         (
+#             out_react_force,
+#             "RXN_FX    RXN_FY    RXN_FZ",
+#             "RFORCE ",
+#             30,
+#             7,
+#             25,
+#         ),
+#         (
+#             out_coulomb_force,
+#             "COUL_FX   COUL_FY   COUL_FZ",
+#             "CFORCE ",
+#             30,
+#             7,
+#             25,
+#         ),
+#         (
+#             out_total_force,
+#             "TOT_FX    TOT_FY    TOT_FZ",
+#             "TFORCE ",
+#             30,
+#             7,
+#             25,
+#         ),
+#         (
+#             out_total_pot,
+#             "TOTAL_PHI",
+#             "TOTAL ",
+#             10,
+#             6,
+#             9,
+#         ),
+#         (
+#             out_surf_charge,
+#             "SURF_CHARGE    SURF_X     SURF_Y     SURF_Z     SURF_EN     SURF_E",
+#             "SCh, x, y, z, surf En, surf. E",
+#             70,
+#             35,
+#             65,
+#         ),
+#     ]
+#
+#     for (
+#         flag,
+#         column_name,
+#         datum_name,
+#         column_step,
+#         datum_step,
+#         column_len,
+#     ) in output_columns_flags:
+#         if flag:
+#             frc_header = frc_header[:j] + column_name + frc_header[j + column_len :]
+#             datum = datum[:k] + datum_name + datum[k + datum_step :]
+#             j += column_step
+#             k += datum_step
+#
+#         if (
+#             j >= 120
+#             and (
+#                 out_react_pot
+#                 or out_coulomb_pot
+#                 or out_atom_pot
+#                 or out_debye_frac
+#                 or out_field
+#                 or out_surf_charge
+#                 or out_total_force
+#                 or out_react_force
+#                 or out_coulomb_force
+#                 or out_total_pot
+#             )
+#             and flag not in [out_surf_charge]
+#         ):
+#             out_react_pot = out_coulomb_pot = out_atom_pot = out_debye_frac = (
+#                 out_field
+#             ) = out_surf_charge = out_total_force = out_react_force = (
+#                 out_coulomb_force
+#             ) = out_total_pot = False
+#
+#         if (
+#             j >= 90
+#             and flag
+#             in [
+#                 out_field,
+#                 out_react_force,
+#                 out_coulomb_force,
+#                 out_total_force,
+#             ]
+#             and (
+#                 out_field
+#                 or out_surf_charge
+#                 or out_total_force
+#                 or out_react_force
+#                 or out_coulomb_force
+#                 or out_total_pot
+#             )
+#         ):
+#             out_field = out_surf_charge = out_total_force = out_react_force = (
+#                 out_coulomb_force
+#             ) = out_total_pot = False
+#
+#         if j >= 105 and flag is out_total_pot and out_total_pot:
+#             out_total_pot = False
+#
+#         if j >= 85 and flag is out_surf_charge and out_surf_charge:
+#             out_surf_charge = False
+#
+#     return frc_header.rstrip(), datum.rstrip()
 
 
 def _setup_output_header_strings(
@@ -484,104 +1016,115 @@ def _setup_output_header_strings(
     out_coulomb_force,
     out_total_pot,
 ):
-    """Sets up the column/datum header strings for output frc file based on output flags."""
-    frc_header = " " * 80
-    datum = " " * 65
-    j = 0
-    k = 0
-    output_columns_flags = [
-        (out_atom_desc, "ATOM DESCRIPTOR", "ATOM ", 20, 5, 15),
-        (
-            out_atom_coords,
-            "ATOM COORDINATES (X,Y,Z)",
-            "COORDINATES ",
-            30,
-            12,
-            24,
-        ),
-        (out_charge, "CHARGE", "CHARGE ", 10, 7, 6),
-        (out_grid_pot, "GRID PT.", "POTENTIALS ", 10, 11, 8),
-        (out_salt, "SALT CON", "SALT ", 10, 5, 8),
-        (out_react_pot, " REAC. PT.", "REACTION ", 10, 9, 10),
-        (out_coulomb_pot, " COUL. POT", "COULOMBIC ", 10, 10, 10),
-        (out_atom_pot, "ATOM PT.", "ATOMIC PT. ", 10, 11, 8),
-        (out_debye_frac, "DEBFRACTION", "DEBFRACTION ", 14, 12, 11),
-        (out_field, "GRID FIELDS: (Ex, Ey, Ez)", "FIELDS ", 30, 7, 25),
-        (out_react_force, "REAC. FORCE: (Rx, Ry, Rz)", "RFORCE ", 30, 7, 25),
-        (out_coulomb_force, "COUL. FORCE: (Cx, Cy, Cz)", "CFORCE ", 30, 7, 25),
-        (out_total_force, "TOTAL FORCE: (Tx, Ty, Tz)", "TFORCE ", 30, 7, 25),
-        (out_total_pot, " TOTAL", "TOTAL ", 10, 6, 6),
-        (
-            out_surf_charge,
-            "sCharge,    x          y       z       urf.E°n,surf. E[kT/(qA)]",
-            "SCh, x, y, z, surf En, surf. E",
-            50,
-            35,
-            65,
-        ),
-    ]
+    """Sets up column/datum header strings for text FRC output.
 
-    for (
-        flag,
-        column_name,
-        datum_name,
-        column_start_index,
-        datum_start_index,
-        column_len,
-    ) in output_columns_flags:
-        if flag:
-            frc_header = frc_header[:j] + column_name + frc_header[j + column_len :]
-            datum = datum[:k] + datum_name + datum[k + datum_start_index :]
-            j += column_start_index
-            k += datum_start_index
-        if (
-            j >= 80
-            and (
-                out_react_pot
-                or out_coulomb_pot
-                or out_atom_pot
-                or out_debye_frac
-                or out_field
-                or out_surf_charge
-                or out_total_force
-                or out_react_force
-                or out_coulomb_force
-                or out_total_pot
-            )
-            and flag not in [out_surf_charge]
-        ):
-            out_react_pot = out_coulomb_pot = out_atom_pot = out_debye_frac = (
-                out_field
-            ) = out_surf_charge = out_total_force = out_react_force = (
-                out_coulomb_force
-            ) = out_total_pot = False
-        if (
-            j >= 60
-            and flag
-            in [
-                out_field,
-                out_react_force,
-                out_coulomb_force,
-                out_total_force,
-            ]
-            and (
-                out_field
-                or out_surf_charge
-                or out_total_force
-                or out_react_force
-                or out_coulomb_force
-                or out_total_pot
-            )
-        ):
-            out_field = out_surf_charge = out_total_force = out_react_force = (
-                out_coulomb_force
-            ) = out_total_pot = False
-        if j >= 70 and flag is out_total_pot and out_total_pot:
-            out_total_pot = False
-        if j >= 50 and flag is out_surf_charge and out_surf_charge:
-            out_surf_charge = False
+    Header widths are aligned with _write_output_values().
+    """
+    atom_w = 8
+    resname_w = 11
+    chain_w = 8
+    resid_w = 8
+    desc_w = atom_w + resname_w + chain_w + resid_w
 
-    # print("datum:>>>", datum)
+    scalar_w = 12
+    vector_w = 12
+    debye_w = 14
+    surf_w = 12
+
+    header_parts = []
+    datum_parts = []
+
+    if out_atom_desc:
+        header_parts.append(
+            f"{'ATOM':<{atom_w}}"
+            f"{'RESNAME':<{resname_w}}"
+            f"{'CHAIN':<{chain_w}}"
+            f"{'RESID':<{resid_w}}"
+        )
+        datum_parts.append("ATOM")
+
+    if out_atom_coords:
+        header_parts.append(
+            f"{'X':>{vector_w}}" f"{'Y':>{vector_w}}" f"{'Z':>{vector_w}}"
+        )
+        datum_parts.append("COORDINATES")
+
+    if out_charge:
+        header_parts.append(f"{'CHARGE':>{scalar_w}}")
+        datum_parts.append("CHARGE")
+
+    if out_grid_pot:
+        header_parts.append(f"{'GRID_PHI':>{scalar_w}}")
+        datum_parts.append("POTENTIALS")
+
+    if out_salt:
+        header_parts.append(f"{'SALT_CONC':>{scalar_w}}")
+        datum_parts.append("SALT")
+
+    if out_react_pot:
+        header_parts.append(f"{'RXN_PHI':>{scalar_w}}")
+        datum_parts.append("REACTION")
+
+    if out_coulomb_pot:
+        header_parts.append(f"{'COUL_PHI':>{scalar_w}}")
+        datum_parts.append("COULOMBIC")
+
+    if out_atom_pot:
+        header_parts.append(f"{'ATOM_PHI':>{scalar_w}}")
+        datum_parts.append("ATOMIC_PT")
+
+    if out_debye_frac:
+        header_parts.append(f"{'DEBYE_FRAC':>{debye_w}}")
+        datum_parts.append("DEBFRACTION")
+
+    if out_field:
+        header_parts.append(
+            f"{'GF_EX':>{vector_w}}" f"{'GF_EY':>{vector_w}}" f"{'GF_EZ':>{vector_w}}"
+        )
+        datum_parts.append("FIELDS")
+
+    if out_react_force:
+        header_parts.append(
+            f"{'RXN_FX':>{vector_w}}"
+            f"{'RXN_FY':>{vector_w}}"
+            f"{'RXN_FZ':>{vector_w}}"
+        )
+        datum_parts.append("RXN_FORCE")
+
+    if out_coulomb_force:
+        header_parts.append(
+            f"{'COUL_FX':>{vector_w}}"
+            f"{'COUL_FY':>{vector_w}}"
+            f"{'COUL_FZ':>{vector_w}}"
+        )
+        datum_parts.append("COUL_FORCE")
+
+    if out_total_force:
+        header_parts.append(
+            f"{'TOT_FX':>{vector_w}}"
+            f"{'TOT_FY':>{vector_w}}"
+            f"{'TOT_FZ':>{vector_w}}"
+        )
+        datum_parts.append("TOT_FORCE")
+
+    if out_total_pot:
+        header_parts.append(f"{'TOTAL_PHI':>{scalar_w}}")
+        datum_parts.append("TOTAL")
+
+    if out_surf_charge:
+        header_parts.append(
+            f"{'SURF_CHARGE':>{surf_w}}"
+            f"{'SURF_X':>{surf_w}}"
+            f"{'SURF_Y':>{surf_w}}"
+            f"{'SURF_Z':>{surf_w}}"
+            f"{'SURF_EN':>{surf_w}}"
+            f"{'SURF_E':>{surf_w}}"
+        )
+        datum_parts.append("SURFACE_CHARGE")
+
+    frc_header = "".join(header_parts).rstrip()
+    datum = " ".join(datum_parts)
+
     return frc_header, datum
 
 
@@ -592,14 +1135,19 @@ def write_frc_file(
     percentage_fill,
     external_dielectric,
     media_eps,
+    gap_dielectric,
+    dielectric_model,
+    surface_method,
     epkt,
     ion_strength,
     ion_radius,
-    linear_iteration_num,
-    non_linear_iteration_num,
+    probe_radii,
+    total_iters,
+    final_rms,
+    final_dphi,
+    convergence_status,
     boundary_type,
     file_map_record,
-    probe_radii,
     potential_upper_bond,
     out_atom_desc=False,
     out_salt=False,
@@ -642,6 +1190,12 @@ def write_frc_file(
     taylor_coeff3 = taylor_coeffs[2]
     taylor_coeff4 = taylor_coeffs[3]
     taylor_coeff5 = taylor_coeffs[4]
+
+    # Legacy helper compatibility:
+    # _calculate_grid_potential_and_salt() still expects this name. The new
+    # FRC header reports solver-level total_iters/final_rms/final_dphi/status
+    # instead, so do not reuse total_iters here as a nonlinear iteration count.
+    non_linear_iteration_num = 0
 
     custom_output_specified = (
         out_atom_desc
@@ -704,12 +1258,16 @@ def write_frc_file(
             percent_fill=percentage_fill,
             external_dielectric=external_dielectric,
             media_epsilons=media_eps,
-            epkt_value=epkt,
+            gap_dielectric=gap_dielectric,
+            dielectric_model=dielectric_model,
+            surface_method=surface_method,
             ion_strength=ion_strength,
             ion_radius=ion_radius,
             probe_radius=probe_radii,
-            linear_iteration_num=linear_iteration_num,
-            non_linear_iteration_num=non_linear_iteration_num,
+            total_iters=total_iters,
+            final_rms=final_rms,
+            final_dphi=final_dphi,
+            convergence_status=convergence_status,
             boundary_condition=boundary_type,
             datum=datum_header,
             map_title=file_map_record,
@@ -720,12 +1278,13 @@ def write_frc_file(
             out_react_force = out_total_force = out_md = False
 
         rfield_data = []
+        media_num = 1
         if out_react_force or out_md or out_total_force:
             if (
                 1 == media_num
-                and abs(media_eps[1] * epkt - 1.0) < 1e-6
                 and media_eps
                 and len(media_eps) > 1
+                and abs(media_eps[1] * epkt - 1.0) < 1e-6
             ):
                 rfield_data = rforceeps1()
             else:
@@ -747,12 +1306,19 @@ def write_frc_file(
                     residue_name,
                     chain_name,
                     residue_number,
+                    _,
+                    segid,
+                    atomic_number,
                 ) = atom_key
                 atom_coords = atom_data[ATOMFIELD_X : ATOMFIELD_Z + 1]
 
                 grid_coords = (atom_coords - box_center) * scale_factor + grid_offset
+
                 atom_descriptor = (
-                    f"{atom_name:<5s}{residue_name:<5s}{chain_name:<2s}{residue_number:<4d}"
+                    f"{atom_name:<8s}"
+                    f"{residue_name:<11s}"
+                    f"{chain_name:<8s}"
+                    f"{residue_number:<8d}"
                     if out_atom_desc
                     else None
                 )
@@ -792,6 +1358,7 @@ def write_frc_file(
                     if out_atom_pot
                     else None
                 )
+
                 potential_value, salt_concentration = (
                     _calculate_grid_potential_and_salt(
                         grid_coords=grid_coords,
@@ -811,6 +1378,7 @@ def write_frc_file(
                     or (out_atom_pot and atom_potential_value == 0.0)
                     else (None, None)
                 )
+
                 if potential_value is not None and charge_value is not None:
                     total_electrostatic_energy += potential_value * charge_value
 
@@ -883,15 +1451,47 @@ def write_frc_file(
                     potential_value=potential_value,
                     salt_concentration=salt_concentration,
                 )
+
+            # Electrostatic energy is 0.5 * sum(q_i * phi_i) to avoid double-counting
+            # pairwise charge interactions.
             total_electrostatic_energy *= 0.5
             output_file_stream.write(
-                f"Total energy = {total_electrostatic_energy:.4f} kT\n"
+                f"# Total electrostatic energy = {total_electrostatic_energy:.4f} kT\n"
             )
 
-    # except FileNotFoundError as e:
-    #     vprint(PRINT_MANDATORY, f"File not found: {e.filename}")
-    # except Exception as e:
-    #     vprint(PRINT_MANDATORY, f"Error writing FRC file: {e}")
+    except FileNotFoundError as e:
+        missing_path = e.filename if e.filename else output_frc_file
+        vprint(
+            ERROR,
+            _VERBOSITY,
+            f"FRC output failed: required file or directory was not found: {missing_path}",
+        )
+        sys_exit(1)
+
+    except PermissionError as e:
+        target_path = e.filename if e.filename else output_frc_file
+        vprint(
+            ERROR,
+            _VERBOSITY,
+            f"FRC output failed: permission denied: {target_path}",
+        )
+        sys_exit(1)
+
+    except OSError as e:
+        vprint(
+            ERROR,
+            _VERBOSITY,
+            f"FRC output failed: could not write '{output_frc_file}': {e}",
+        )
+        sys_exit(1)
+
+    except Exception as e:
+        vprint(
+            ERROR,
+            _VERBOSITY,
+            f"FRC output failed while writing '{output_frc_file}': {e}",
+        )
+        sys_exit(1)
     finally:
         if output_file_stream:
             output_file_stream.close()

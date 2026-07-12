@@ -22,6 +22,7 @@ from pydelphi.utils.io.inproc_helpers.param_definitions.parameters import (
     ParameterGroup,
     ParamFunction,
     ParamFunctionAttribute,
+    ParamStatus,
 )
 
 
@@ -38,41 +39,6 @@ def get_param_definitions():
     """Defines and returns PB-related ParamStatement objects."""
     params = {}
 
-    fun_acenter = ParamFunction(
-        name="acent", alias="ac", attributes=[], active=False, required=False
-    )
-    fun_acenter.add_attribute(
-        ParamFunctionAttribute(
-            name="x",
-            alias="x",
-            desc="x-coordinate",
-            required=True,
-            nameonly=False,
-            value=0.0,
-        )
-    )
-    fun_acenter.add_attribute(
-        ParamFunctionAttribute(
-            name="y",
-            alias="y",
-            desc="y-coordinate",
-            required=True,
-            nameonly=False,
-            value=0.0,
-        )
-    )
-    fun_acenter.add_attribute(
-        ParamFunctionAttribute(
-            name="z",
-            alias="z",
-            desc="z-coordinate",
-            required=True,
-            nameonly=False,
-            value=0.0,
-        )
-    )
-    params[("acenter", "acent", "ac")] = fun_acenter
-
     fun_energy = ParamFunction(
         name="calculate_energies",
         alias="energy",
@@ -83,16 +49,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="grid",
             alias="g",
-            desc="grid energy",
-            required=False,
-            nameonly=True,
-        )
-    )
-    fun_energy.add_attribute(
-        ParamFunctionAttribute(
-            name="polar",
-            alias="p",
-            desc="polar solvation/reaction field energy",
+            desc="Grid energy",
             required=False,
             nameonly=True,
         )
@@ -101,16 +58,16 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="coulombic",
             alias="c",
-            desc="coulombic energy",
+            desc="Pairwise coulombic interaction energy of atoms in system",
             required=False,
             nameonly=True,
         )
     )
     fun_energy.add_attribute(
         ParamFunctionAttribute(
-            name="ionic",
-            alias="i",
-            desc="coulombic energy",
+            name="polar",
+            alias="p",
+            desc="Polar solvation/reaction field energy",
             required=False,
             nameonly=True,
         )
@@ -119,16 +76,37 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="nonpolar",
             alias="np",
-            desc="non-polar energy",
+            desc="Non-polar energy",
             required=False,
             nameonly=True,
         )
     )
     fun_energy.add_attribute(
         ParamFunctionAttribute(
-            name="lj", alias="lj", desc="vdW energy", required=False, nameonly=True
+            name="lj",
+            alias="lj",
+            desc="Pairwise vdW energy",
+            required=False,
+            nameonly=True,
+            status=ParamStatus.DEPRECATED,
+            status_desc=(
+                "Legacy direct VDW input is accepted for compatibility and uses "
+                "a simplified pairwise treatment.\n"
+                "               "
+                "Future VDW/Lennard-Jones support should be handled through a "
+                "dedicated molecular-mechanics backend."
+            ),
         )
     )
+    # fun_energy.add_attribute(
+    #     ParamFunctionAttribute(
+    #         name="ionic",
+    #         alias="i",
+    #         desc="ionic energy",
+    #         required=False,
+    #         nameonly=True,
+    #     )
+    # )
     params[("calculate_energies", "energies", "energy")] = fun_energy
 
     fun_site = ParamFunction(

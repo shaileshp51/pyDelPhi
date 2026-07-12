@@ -1,23 +1,28 @@
 [tool.poetry]
 name = "pydelphi"
-version = "0.2.0"
+# DEV NOTE: keep this synchronized with pydelphi/__init__.py.
+version = "0.2.1.dev260709"
 description = "pyDelPhi — a Python/Numba/CUDA implementation of the DelPhi Poisson–Boltzmann solver for biomolecular electrostatics and solvation energy calculations."
 authors = [
   "Shailesh Kumar Panday <shaileshp51@gmail.com>"
 ]
 maintainers = [
-  "pyDelPhi Development Team <https://github.com/shaileshp51/pyDelPhi/issues>"
+  "pyDelPhi Development Team <https://github.com/delphi001/pyDelPhi/issues>"
 ]
 license = "AGPL-3.0-or-later"
 readme = "README.md"
 packages = [{ include = "pydelphi" }]
-# Include non-code assets in the source and wheel distributions
+
+# Project-level Conda specifications are useful to source-distribution users,
+# but are not runtime package data and therefore are shipped in the sdist only.
 include = [
     "README.md",
     "LICENSE",
     "AUTHORS.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
+    { path = "environment.yml", format = ["sdist"] },
+    { path = "environment-traj.yml", format = ["sdist"] },
     "pydelphi/data/**/*.tsv",
     "pydelphi/data/**/*.prm",
     "pydelphi/data/**/*.pqr",
@@ -37,20 +42,24 @@ include = [
     "pydelphi/examples/**/*.crg"
 ]
 exclude = [
+    "**/*.bak",
+    "**/*~",
     "**/*.npy",
     "**/*.npz",
     "**/*.log",
     "**/*.txt",
-    "**/__pycache__/**"
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/__pycache__/**",
+    ".pytest_cache/**",
+    ".mypy_cache/**",
+    ".ruff_cache/**"
 ]
 
+repository = "https://github.com/delphi001/pyDelPhi"
+homepage = "https://github.com/delphi001/pyDelPhi"
+documentation = "https://github.com/delphi001/pyDelPhi/wiki"
 
-# Project URLs
-repository = "https://github.com/shaileshp51/pyDelPhi"
-homepage = "https://github.com/shaileshp51/pyDelPhi"
-documentation = "https://github.com/shaileshp51/pyDelPhi/wiki"
-
-# Search metadata
 keywords = [
     "Poisson-Boltzmann",
     "Electrostatics",
@@ -70,7 +79,8 @@ classifiers = [
     "Operating System :: POSIX :: Linux",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
@@ -79,21 +89,34 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.12,<3.13"
-# Verified configuration: Numba 0.61.2+ with NumPy 2.2.2+ (NumPy 2.3+ not yet supported)
-numpy = ">=2.2.2,<2.3"
-numba = ">=0.61.2,<0.62"
+python = ">=3.13,<3.14"
+numpy = ">=2.3.5,<2.4"
+numba = ">=0.62.1,<0.63"
+
+# Deliberately not declared as package requirements:
+#
+# - numba-cuda: accelerator support. Recommended Conda environments install it,
+#   but pyDelPhi CPU mode must remain usable when it is absent, disabled, or
+#   unable to initialize because no compatible NVIDIA driver/device is present.
+#
+# - netCDF4: trajectory/NetCDF support. The tested release is 1.7.3 and
+#   is pinned in environment-traj.yml. Trajectory code must import it lazily and report a
+#   feature-specific installation message when unavailable.
+#
+# Do not add a Poetry "cuda" extra: CUDA availability is a runtime capability,
+# not a requirement for installing or running the CPU backend.
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
 flake8 = "^6.0.0"
 
-# CLI entry points
 [tool.poetry.scripts]
 pydelphi-static = "pydelphi.scripts.pydelphi_static:main"
+pydelphi-trajectory = "pydelphi.scripts.pydelphi_traj:main"
 pydelphi-help = "pydelphi.scripts.pydelphi_help:main"
-pydelphi-test = "pydelphi.tests.test_pydelphi_energy_regression:main"
+pydelphi-test = "pydelphi.tests.test_energy_regression:main"
+pydelphi-test-traj = "pydelphi.tests.test_traj_regression:main"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.9.0"]
 build-backend = "poetry.core.masonry.api"

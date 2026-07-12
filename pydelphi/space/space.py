@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
+#
+# PyDelphi is free software: you can redistribute it and/or modify
+# (at your option) any later version.
+#
+# PyDelphi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#
+
 
 import time
 import math
@@ -111,6 +120,7 @@ class Space:
         dielectric_model,
         surface_method,
         surface_offset,
+        r_offset,
         surface_density_exponent,
         grid_shape,
         grid_origin,
@@ -147,6 +157,7 @@ class Space:
         self.dielectric_model = dielectric_model
         self.surface_method = surface_method
         self.surface_offset = surface_offset
+        self.r_offset = r_offset
         self.surface_density_exponent = surface_density_exponent
         self.grid_shape = grid_shape.astype(delphi_int)
         self.grid_origin = grid_origin.astype(delphi_real)
@@ -174,6 +185,7 @@ class Space:
         self.epsilon_dimension = self.num_atoms + self.num_objects + 2
 
         # Object local fields used to facilitate calculations
+        self.atom_adjacency_csr = None
         self.zeta_surf_grid_coords = None
         self.zeta_surf_grid_indices = None
         self.num_zeta_surf_grid_coords = 0
@@ -315,8 +327,6 @@ class Space:
         )
 
         # Calculate Params & Build Map for VDW context
-        # voxel_params_vdw = self._setup_voxel_params(side_length_vdw)
-        # voxel_data_vdw = self._build_specific_voxel_map(voxel_params_vdw)
         voxel_params_vdw, voxel_data_vdw, time_elapsed = (
             build_consolidated_atoms_space_voxel_map(
                 side_length_vdw,
@@ -492,6 +502,20 @@ class Space:
 
         # 2. Initialize Zeta surface map (conditionally builds/reuses map)
         self._init_zeta_surface_map()
+        # print(
+        #     "space.run after _init_zeta_surface_map: ",
+        #     "self.use_zeta_surf = ",
+        #     self.use_zeta_surf,
+        #     "self.zeta_distance = ",
+        #     self.zeta_distance,
+        #     "self.zeta_surface_map_1d = ",
+        #     self.zeta_surface_map_1d,
+        #     "self.zeta_surface_map_1d sum:",
+        #     np.sum(self.zeta_surface_map_1d),
+        #     "total points = ",
+        #     np.prod(self.zeta_surface_map_1d.shape),
+        # )
+        # np.save("zeta_surface_map_1d-init.npy", self.zeta_surface_map_1d)
 
         # 3. VDW Surface Calculation (Passes calculated maps)
         tic_vdw_srf = time.perf_counter()
@@ -527,7 +551,9 @@ class Space:
             verbosity=self.verbosity,
             approx_zero=delphi_real(ConstDelPhi.ApproxZero.value),
         )
+
         molsurf_vdw.create_vdw_molecular_surfaces(
+            platform=self.platform,
             use_zeta_surface=self.use_zeta_surf,
             solve_pbe=True,
             read_rxn_from_frc=True,
@@ -547,9 +573,27 @@ class Space:
         self.dielectric_boundary_grids = molsurf_vdw.boundary_grid_points[
             : molsurf_vdw.num_boundary_grid_points
         ].astype(delphi_int)
+
+        # print(
+        #     "\n\nspace.run after create_vdw_molecular_surfaces: ",
+        #     "self.use_zeta_surf = ",
+        #     self.use_zeta_surf,
+        #     "self.zeta_distance = ",
+        #     self.zeta_distance,
+        #     "self.zeta_surf_grid_coords = ",
+        #     self.zeta_surf_grid_coords,
+        #     "self.zeta_surf_grid_indices = ",
+        #     self.zeta_surf_grid_indices,
+        #     "self.num_zeta_surf_grid_coords = ",
+        #     self.num_zeta_surf_grid_coords,
+        #     "self.zeta_surface_map_1d = ",
+        #     self.zeta_surface_map_1d,
+        #     "self.zeta_surface_map_1d sum:",
+        #     np.sum(self.zeta_surface_map_1d),
+        # )
         self.induced_surf_charge_positions = molsurf_vdw.surface_charge_positions
 
-    def _init_adjacency_map(self):
+    def _init_atom_adjacency_csr(self):
         """Calculates adjacency list, building a new voxel map."""
         if not self.enabled_nonpolar:
             vprint(
@@ -563,10 +607,6 @@ class Space:
             return
 
         vprint(DEBUG, _VERBOSITY, "Initializing Overlap Adjacency List...")
-
-        from pydelphi.space.core.adjacency_builder import (
-            calculate_atom_overlap_adjacency,
-        )
 
         voxel_params_to_use = None
         voxel_data_to_use = None
@@ -603,10 +643,16 @@ class Space:
         voxel_ids, voxel_start, voxel_end = voxel_data_to_use
         voxel_origin, voxel_shape, voxel_scale, _ = voxel_params_to_use
 
-        self.adjacency_map = calculate_atom_overlap_adjacency(
+        from pydelphi.space.core.adjacency_builder_csr import (
+            build_atom_overlap_adjacency_csr,
+        )
+
+        self.atom_adjacency_csr = build_atom_overlap_adjacency_csr(
             platform=self.platform,
             # num_cuda_threads=self.num_cuda_threads,
             atoms_data=self.atoms_data,
+            probe_radius=self.probe_radius,
+            r_offset=self.r_offset,
             # Pass chosen voxel args
             voxel_atom_ids=voxel_ids,
             voxel_atom_start_index=voxel_start,
@@ -644,7 +690,7 @@ class Space:
 
         if self.enabled_nonpolar:
             tic_adjmap = time.perf_counter()
-            self._init_adjacency_map()
+            self._init_atom_adjacency_csr()
             toc_adjmap = time.perf_counter()
             self.timings["space| build atom-overlap adjacency map"] = (
                 f"{toc_adjmap - tic_adjmap:.3f}"
@@ -845,6 +891,10 @@ class Space:
         ctx.gauss_density_map_midpoints_1d = self.gauss_density_map_midpoints_1d
         ctx.surface_map_1d = self.surface_map_1d
         ctx.grad_surface_map_1d = self.grad_surface_map_1d
+
+        if self.atom_adjacency_csr is not None:
+            ctx.adjacency_map = self.atom_adjacency_csr
+
         if self.surface_method.int_value == SurfaceMethod.GCS.int_value:
             ctx.solute_inside_map_1d = self.solute_inside_map_1d
             ctx.solute_outside_map_1d = self.solute_outside_map_1d
@@ -865,7 +915,7 @@ class Space:
                 # Note: always num_zeta_surf_grid_coords and num_zeta_surf_grid_index must be equal.
                 ctx.num_zeta_surf_grid_index = self.num_zeta_surf_grid_coords
 
-        # ATTENTION: If zeta-surface is enabled `vdw_molecular_surface` must also be
+        # Important: If zeta-surface is enabled `vdw_molecular_surface` must also be
         # saved to satisfy downstream usage.
         if (
             self.surface_method.int_value != SurfaceMethod.VDW.int_value
@@ -896,7 +946,7 @@ class Space:
         ):
             epsilon_map_1d_local = None
             epsilon_r_map_1d_local = None
-            # Important: GCS, surface_map is known only at grid points, at midpoints is approximated from neighbors.
+            # ATTENTION: GCS, surface_map is known only at grid points, at midpoints is approximated from neighbors.
             # So, is_surf_midpoints_arg must be False to enable approximation at midpoints for GCS.
             is_surf_midpoints_arg = (
                 False

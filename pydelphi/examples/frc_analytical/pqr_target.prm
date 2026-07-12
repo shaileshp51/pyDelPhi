@@ -1,0 +1,23 @@
+grid_size=161 
+scale=8.0
+
+in(modpdb4,file="./source.pqr")
+
+select(name="SRC", condition="name N1 N2")
+select(name="TGT", condition="not {name N1 N2}")
+
+frc(
+    source="SRC", 
+    tfile="target.pqr",
+    outfile="./pqr_custom_target.frc"
+)
+
+indi=2.0
+bndcon=coulombic
+max_delta_phi=0.000001
+
+site(a,q,f,p)
+energy(polar,c,g)
+
+out(sel, name="SRC", file="./pqr_target_out_source.pqr")
+out(sel, name="TGT", file="./pqr_targte_out_target.pqr")

@@ -1,0 +1,23 @@
+# DELPHI SITE POTENTIAL FILE
+# grid_size: [161 161 161]
+# percent_fill: 7.500
+# dielectric_model: DielectricModel.TWODIELECTRIC
+# surface_method: SurfaceMethod.VDW
+# exdi: 80.00
+# indi: 2.00
+# ionic_strength_M: 0.0
+# ion_exclusion_radius: 2.0
+# probe_radius_1: 1.4
+# probe_radius_2: 1.4
+# total_iters: 550
+# final_rms: 2.953e-09
+# final_dphi: 6.833e-07
+# convergence_status: CONVERGED_THRESH
+# boundary_condition: BoundaryCondition.COULOMBIC
+# data_output: ATOM CHARGE POTENTIALS FIELDS
+# title: frc map
+# GRID_PHI = grid electrostatic potential interpolated at the evaluation point
+# GF_EX/GF_EY/GF_EZ = grid electric field components interpolated at the evaluation point
+ATOM    RESNAME    CHAIN   RESID         CHARGE    GRID_PHI       GF_EX       GF_EY       GF_EZ
+N3      TGT        B       2             1.0000     38.1296     -6.7189     -0.9928      0.0000
+# Total electrostatic energy = 19.0648 kT

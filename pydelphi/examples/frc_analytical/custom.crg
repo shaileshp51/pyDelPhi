@@ -1,0 +1,6 @@
+! custom charge file for frc_analytical
+! source atoms are charged; target atom is neutral and is removed with tmode="ignore"
+atom__resnumbc_charge_
+N1    SRC      10.000
+N2    SRC      20.000
+N3    TGT       0.000

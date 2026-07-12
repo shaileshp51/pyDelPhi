@@ -76,6 +76,10 @@ class PBESolver:
         """
         self.solver = None
         self.solver_name = solver_name.lower()
+        self.final_rms = None
+        self.final_dphi = None
+        self.total_iters = 0
+        self.convergence_status = None
         self.timings = {}
 
         if self.solver_name == "nwt":
@@ -92,6 +96,7 @@ class PBESolver:
                 num_cuda_threads,
                 grid_shape,
             )
+
         else:
             raise ValueError("Unknown solver: " + self.solver_name)
 
@@ -221,6 +226,10 @@ class PBESolver:
                 charged_gridpoints_1d,  # Original fixed charges
                 phimap_parentrun,
             )
+            self.final_rms = self.solver.final_rms
+            self.final_dphi = self.solver.final_dphi
+            self.total_iters = self.solver.total_iters
+            self.convergence_status = self.solver.convergence_status
             self.timings.update(self.solver.timings)
         elif self.solver_name == "nwt":
             phimap_current_1d = self.solver.solve_pbe(
@@ -257,6 +266,10 @@ class PBESolver:
                 charged_gridpoints_1d,
                 phimap_parentrun,
             )
+            self.final_rms = self.solver.final_rms
+            self.final_dphi = self.solver.final_dphi
+            self.total_iters = self.solver.total_iters
+            self.convergence_status = self.solver.convergence_status
             self.timings.update(self.solver.timings)
 
         return phimap_current_1d

@@ -1,0 +1,27 @@
+scale=2.0
+gridbox_type = cubic
+gridbox_margin = 30
+
+in(modpdb4,file="./sphere.pqr",format=pqr)
+
+indi=4
+exdi=80.0
+
+prbrad=1.4
+salt=0
+
+boundary_condition=coulombic
+
+!other run parameters
+maxc=0.00001
+
+! ZETA_POTENTIAL AND DISTANCE WORK ONLY WITH TWODIELECTRIC MODEL
+! IF DIELECTRIC_MODEL=GAUSSIAN IT OVERRIDES ZETA_POTENTIAL.
+!zeta_distance or zd=4 (must be > 0 and < 10)
+zeta_potential=true
+zeta_distance=4
+out(zphi,file="./zeta_8A.zphi")
+
+!other output formats can be used as well
+energy(p,c)
+
