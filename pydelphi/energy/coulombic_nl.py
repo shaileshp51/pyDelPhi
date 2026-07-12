@@ -298,7 +298,7 @@ def _cuda_calc_energy_clbnonl(
     grid_origin_tuple = tuple(grid_origin)
     grid_shape_tuple = tuple(grid_shape)
 
-    _cuda_calc_energy_clbnonl_kernel[int(blocks_per_grid), int(threads_per_block)](
+    _cuda_calc_energy_clbnonl_kernel[blocks_per_grid, threads_per_block](
         d_atoms, d_phi, grid_origin_tuple, grid_spacing, grid_shape_tuple, d_energy
     )
 

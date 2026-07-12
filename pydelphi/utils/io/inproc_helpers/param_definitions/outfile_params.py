@@ -26,27 +26,23 @@ from pydelphi.utils.io.inproc_helpers.param_definitions.parameters import (
 
 
 def get_group_definition():
-    """Defines and returns the 'outfile' ParameterGroup."""
+    """Defines and returns the 'pb' ParameterGroup."""
     return ParameterGroup(
         "outfile",
-        "Parameters for specifying output files to write.",
-        "Parameters for specifying output files to write.",
+        "The set of parameters for specifying the output files to read.",
+        "The set of parameters for specifying the output files to read.",
     )
 
 
 def get_param_definitions():
-    """Defines and returns output-related ParamFunction objects."""
+    """Defines and returns PB-related ParamStatement objects."""
     params = {}
 
-    # ----------------------------
-    # out(energy, file=...)
-    # ----------------------------
     out_energy = ParamFunction(
-        name="out",
-        alias="write",
-        attributes=[],
-        desc_short="Output energy components to a file.",
-        desc_long="Output function to write calculated energy components to a file.",
+        "out",
+        "write",
+        [],
+        "Delphi function to output calculated energy components to a file",
     )
     out_energy.add_attribute(
         ParamFunctionAttribute(
@@ -62,23 +58,20 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
         )
     )
-    params[("out__energy", "out__energy", "out__energy")] = out_energy
+    params[("out_energy", "out_energy", "out_energy")] = out_energy
 
-    # ----------------------------
-    # out(surf, file=..., format=..., precision=...)
-    # ----------------------------
     out_surf = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output solute-surface map to a file.",
-        desc_long="Output function to write the solute-surface map.",
+        desc_short="Delphi function to output",
+        desc_long="Delphi function to output",
     )
     out_surf.add_attribute(
         ParamFunctionAttribute(
@@ -94,7 +87,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
@@ -104,39 +97,32 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="format",
             alias="fmt",
-            desc=(
-                "output file format. options: {auto, cube, phi}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
+            desc="output file format.\n options: {cube, phi}. default: cube",
+            required=True,
             nameonly=False,
-            value="auto",
+            value="cube",
         )
     )
     out_surf.add_attribute(
         ParamFunctionAttribute(
             name="precision",
             alias="prec",
-            desc=(
-                "precision for phi-format output. options: {single, double}. default: single.\n"
-                "\tNOTE: This can differ from calculation precision. Single is usually sufficient for output."
-            ),
-            required=False,
+            desc="precision of the output phi format.\n options: {single, double}. default single.\n "
+            "\tNOTE: This could be different than precision of calculation. usually single precision is sufficient for data output thus set default. "
+            "\n However, one can override it by asking for double precision which may be useful for parentrun of focusing.",
+            required=True,
             nameonly=False,
             value="single",
         )
     )
-    params[("out__surf", "out__surf", "out__surf")] = out_surf
+    params[("out_surf", "out_surf", "out_surf")] = out_surf
 
-    # ----------------------------
-    # out(density, file=..., point=..., format=..., precision=...)
-    # ----------------------------
     out_density = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output Gaussian density to a file.",
-        desc_long="Output function to write Gaussian density data.",
+        desc_short="Delphi function to output",
+        desc_long="Delphi function to output",
     )
     out_density.add_attribute(
         ParamFunctionAttribute(
@@ -152,7 +138,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
@@ -162,8 +148,8 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="point",
             alias="point",
-            desc="choose the point for which density to write. options: {grid, mid, both}. default: grid",
-            required=False,
+            desc="choose the point for which density to write.\n options: {grid, mid, both}. default: grid",
+            required=True,
             nameonly=False,
             value="grid",
         )
@@ -172,39 +158,32 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="format",
             alias="fmt",
-            desc=(
-                "output file format. options: {auto, cube, phi}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
+            desc="output file format.\n options: {cube, phi}. default: cube",
+            required=True,
             nameonly=False,
-            value="auto",
+            value="cube",
         )
     )
     out_density.add_attribute(
         ParamFunctionAttribute(
             name="precision",
             alias="prec",
-            desc=(
-                "precision for phi-format output. options: {single, double}. default: single.\n"
-                "\tNOTE: This can differ from calculation precision. Single is usually sufficient for output."
-            ),
-            required=False,
+            desc="precision of the output phi format.\n options: {single, double}. default single.\n "
+            "\tNOTE: This could be different than precision of calculation. usually single precision is sufficient for data output thus set default. "
+            "\n However, one can override it by asking for double precision which may be useful for parentrun of focusing.",
+            required=True,
             nameonly=False,
             value="single",
         )
     )
-    params[("out__density", "out__density", "out__density")] = out_density
+    params[("out_density", "out_density", "out_density")] = out_density
 
-    # ----------------------------
-    # out(phi, file=..., format=..., precision=..., media=...)
-    # ----------------------------
     out_phi = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output potential (phi) map to a file.",
-        desc_long="An output function to write potential (phi) map data.",
+        desc_short="Delphi function to output",
+        desc_long="Delphi function to output",
     )
     out_phi.add_attribute(
         ParamFunctionAttribute(
@@ -220,7 +199,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
@@ -230,25 +209,20 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="format",
             alias="fmt",
-            desc=(
-                "output file format. options: {auto, cube, phi}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
+            desc="file format",
+            required=True,
             nameonly=False,
-            value="auto",
+            value="cube",
         )
     )
     out_phi.add_attribute(
         ParamFunctionAttribute(
             name="precision",
             alias="prec",
-            desc=(
-                "precision for phi-format output. options: {single, double}. default: single.\n"
-                "\tNOTE: This can differ from calculation precision. Single is usually sufficient for output.\n"
-                "\tUse double for cases like parent runs of focusing."
-            ),
-            required=False,
+            desc="precision of the output phi format.\n options: {single, double}. default single.\n "
+            "\tNOTE: This could be different than precision of calculation. usually single precision is sufficient for data output thus set default. "
+            "\n However, one can override it by asking for double precision which may be useful for parentrun of focusing.",
+            required=True,
             nameonly=False,
             value="single",
         )
@@ -257,29 +231,26 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="media",
             alias="phase",
-            desc="choose the media for which phimap to write. options: {water, vacuum, both}. default: water",
-            required=False,
+            desc="choose the media for which phimap to write.\n options: {water,vacuum,both}. default: water",
+            required=True,
             nameonly=False,
             value="water",
         )
     )
-    params[("out__phi", "out__phi", "out__phi")] = out_phi
+    params[("out_phi", "out_phi", "out_phi")] = out_phi
 
-    # ----------------------------
-    # out(zphi, file=...)
-    # ----------------------------
     out_zphi = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output zeta-potential map to a file.",
-        desc_long="Output function to write zeta-potential map data.",
+        desc_short="Delphi function to output",
+        desc_long="Delphi function to output",
     )
     out_zphi.add_attribute(
         ParamFunctionAttribute(
             name="zphi",
             alias="zphi",
-            desc="write zeta-potential map file",
+            desc="write zeta-potential map to file",
             required=True,
             nameonly=True,
             inuse=True,
@@ -289,23 +260,20 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
         )
     )
-    params[("out__zphi", "out__zphi", "out__zphi")] = out_zphi
+    params[("out_zphi", "out_zphi", "out_zphi")] = out_zphi
 
-    # ----------------------------
-    # out(eps, file=..., format=..., media=..., point=..., precision=...)
-    # ----------------------------
     out_eps = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output dielectric (eps) map to a file.",
-        desc_long="Output function to write dielectric (eps) map data.",
+        desc_short="Delphi function to output",
+        desc_long="Delphi function to output",
     )
     out_eps.add_attribute(
         ParamFunctionAttribute(
@@ -321,7 +289,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
@@ -331,21 +299,18 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="format",
             alias="fmt",
-            desc=(
-                "output file format. options: {auto, cube, phi}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
+            desc="file format",
+            required=True,
             nameonly=False,
-            value="auto",
+            value="cube",
         )
     )
     out_eps.add_attribute(
         ParamFunctionAttribute(
             name="media",
             alias="phase",
-            desc="choose the media for which epsmap to write. options: {water, vacuum, both}. default: water",
-            required=False,
+            desc="choose the media for whch epsmap to write.\n options: {water,vacuum,both}. default: water",
+            required=True,
             nameonly=False,
             value="water",
         )
@@ -354,43 +319,38 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="point",
             alias="point",
-            desc="choose the point for which epsmap to write. options: {grid, mid, both}. default: grid",
-            required=False,
+            desc="choose the point for whch epsmap to write.\n options: {grid,mid,both}. default: grid",
+            required=True,
             nameonly=False,
-            value="grid",
+            value="water",
         )
     )
     out_eps.add_attribute(
         ParamFunctionAttribute(
             name="precision",
             alias="prec",
-            desc=(
-                "precision for phi-format output. options: {single, double}. default: single.\n"
-                "\tNOTE: This can differ from calculation precision. Single is usually sufficient for output.\n"
-                "\tUse double for cases like parent runs of focusing."
-            ),
-            required=False,
+            desc="precision of the output phi format.\n options: {single, double}. default single.\n "
+            "\tNOTE: This could be different than precision of calculation. usually single precision is sufficient for data output thus set default. "
+            "\n However, one can override it by asking for double precision which may be useful for parentrun of focusing.",
+            required=True,
             nameonly=False,
             value="single",
         )
     )
-    params[("out__eps", "out__eps", "out__eps")] = out_eps
+    params[("out_eps", "out_eps", "out_eps")] = out_eps
 
-    # ----------------------------
-    # out(modpdb4, file=..., format=...)
-    # ----------------------------
     out_modpdb4 = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output modified structure file (PDB/PQR).",
-        desc_long="Output function to write a modified structure file (typically PQR).",
+        desc_short="Delphi output function for PQR",
+        desc_long="Delphi output function for PQR",
     )
     out_modpdb4.add_attribute(
         ParamFunctionAttribute(
             name="modpdb4",
-            alias="modpdb4",
-            desc="write modified structure file",
+            alias="mobpdb4",
+            desc="write modifiled pdb format structure",
             required=True,
             nameonly=True,
         )
@@ -399,7 +359,7 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="file",
             alias="file",
-            desc="output file name",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
@@ -409,79 +369,41 @@ def get_param_definitions():
         ParamFunctionAttribute(
             name="format",
             alias="fmt",
-            desc=(
-                "output file format. options: {auto, pqr, pdb}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
+            desc="file format",
+            required=True,
             nameonly=False,
-            value="auto",
+            value="pqr",
         )
     )
-    params[("out__modpdb4", "out__modpdb4", "out__modpdb4")] = out_modpdb4
+    params[("out_modpdb4", "out_modpdb4", "out_modpdb4")] = out_modpdb4
 
-    # ----------------------------
-    # out(selection, name=..., file=..., format=...)
-    # ----------------------------
-    out_selection = ParamFunction(
+    out_frc = ParamFunction(
         name="out",
         alias="write",
         attributes=[],
-        desc_short="Output a named selection as a structure file (PDB/PQR).",
-        desc_long=(
-            "Output function to write a named selection (defined via select(name=...)) "
-            "to a structure file (typically PQR)."
-        ),
-        multicall=True,
+        desc_short="Delphi output function for frc files",
+        desc_long="Delphi input function for frc files",
     )
-
-    out_selection.add_attribute(
+    out_frc.add_attribute(
         ParamFunctionAttribute(
-            name="selection",
-            alias="sel",
-            desc="write a named selection as a structure file",
+            name="frc",
+            alias="frc",
+            desc="write frc file",
             required=True,
             nameonly=True,
             inuse=True,
         )
     )
-
-    out_selection.add_attribute(
+    out_frc.add_attribute(
         ParamFunctionAttribute(
-            name="selname",
-            alias="name",
-            desc="selection name (must match a previously defined select(name=...))",
+            name="file",
+            alias="file",
+            desc="file name",
             required=True,
             nameonly=False,
             value="",
         )
     )
-
-    out_selection.add_attribute(
-        ParamFunctionAttribute(
-            name="file",
-            alias="file",
-            desc="output file name (default: '<name>.<fmt>')",
-            required=False,  # <-- changed
-            nameonly=False,
-            value="",
-        )
-    )
-
-    out_selection.add_attribute(
-        ParamFunctionAttribute(
-            name="format",
-            alias="fmt",
-            desc=(
-                "output file format. options: {auto, pqr, pdb}. "
-                "Default: auto. When auto, infer from file extension; explicit format is authoritative."
-            ),
-            required=False,
-            nameonly=False,
-            value="auto",
-        )
-    )
-
-    params[("out__selection", "out__selection", "out__sel")] = out_selection
+    params[("out_frc", "out_frc", "out_frc")] = out_frc
 
     return params

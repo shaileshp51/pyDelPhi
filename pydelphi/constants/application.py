@@ -297,24 +297,11 @@ class ConstDelPhiInts(Enum):
     Constants:
         SpaceNBRASize (int): Size of the space NBR array.
         ResidueNumberUnknown (int): Integer representing an unknown residue number.
-
-    GPU/local memory safety constants for SAS calculation:
-        SASMaxVertices (int): Maximum number of vertices per thread, with safety factor.
-        SASMaxEdges (int): Maximum number of edges per thread, with safety factor.
-        SASThreadsPerBlock (int): Suggested initial number of threads per CUDA block.
-        SASBlocksPerGrid (int): Suggested initial number of CUDA blocks.
     """
 
-    SerialVDWSurfaceThreadsThreshold = 2
     SpaceNBRASize = 50001
     ResidueNumberUnknown = -999999
     ExitNjitReturnValue = -9999
-
-    # SAS GPU/local memory safety constants
-    SASMaxVertices = 1040  # Safety factor 2× typical 1K vertices
-    SASMaxEdges = 2080  # Safety factor 2× typical 2K edges
-    SASThreadsPerBlock = 128  # Initial launch suggestion
-    SASBlocksPerGrid = 8  # Initial launch suggestion
 
 
 class BoxGridPointType(Enum):
@@ -343,27 +330,3 @@ BOX_INTERIOR: uint8 = BoxGridPointType.INTERIOR.value
 BOX_HOMO_EPSILON: uint8 = BoxGridPointType.HOMO_EPSILON.value
 BOX_ION_ACCESSIBLE: uint8 = BoxGridPointType.ION_ACCESSIBLE.value
 BOX_NONE: uint8 = BoxGridPointType.NONE.value
-
-
-class SoluteBoundaryGridPointType(Enum):
-    """
-    Integer labels assigned to solute boundary grid points.
-
-    These labels are stored in a uint8 property map and used to
-    categorize grid points during boundary search for solute surface
-    with VDW method.
-
-    - NON_BOUNDARY (0): Not a solute boundary point (not on vdw surface).
-    - BOUNDARY_ANY (1 << 1): Boundary point internal to solute (not exposed).
-    - BOUNDARY_EXTERNAL (1 << 2): Boundary point exposed to solvent/exterior.
-    """
-
-    NON_BOUNDARY = uint8(0)
-    BOUNDARY_ANY = uint8(1 << 1)
-    BOUNDARY_EXTERNAL = uint8(1 << 2)
-
-
-# Constants for fast lightweight access in performance-sensitive code
-NON_SOLUTE_BOUNDARY: uint8 = SoluteBoundaryGridPointType.NON_BOUNDARY.value
-SOLUTE_BOUNDARY_ANY: uint8 = SoluteBoundaryGridPointType.BOUNDARY_ANY.value
-SOLUTE_BOUNDARY_EXTERNAL: uint8 = SoluteBoundaryGridPointType.BOUNDARY_EXTERNAL.value

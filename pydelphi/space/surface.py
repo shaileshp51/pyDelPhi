@@ -17,14 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
-#
-# PyDelphi is free software: you can redistribute it and/or modify
-# (at your option) any later version.
-#
-# PyDelphi is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#
 
 import numpy as np
 
@@ -67,10 +59,17 @@ elif PRECISION.int_value == Precision.DOUBLE.int_value:
         pass
         # print("No Cuda")
 
-from pydelphi.space.core.gaussian import (
-    calc_grad_surface_map_analytical,
-    calc_gaussian_like_surface,
-)
+use_gaussian_naive = False
+if use_gaussian_naive:
+    from pydelphi.space.core.gaussian_naive import (
+        calc_grad_surface_map_analytical,
+        calc_gaussian_like_surface,
+    )
+else:
+    from pydelphi.space.core.gaussian import (
+        calc_grad_surface_map_analytical,
+        calc_gaussian_like_surface,
+    )
 
 
 @njit(nogil=True, boundscheck=False, parallel=True)
@@ -116,7 +115,7 @@ def _cpu_grad_surface_map(
                 grad_surface_map_1d[ijk1d_x_3 + 2] = 0.0
 
 
-@cuda.jit
+@cuda.jit(cache=True)
 def _cuda_grad_surface_map(
     grid_spacing: delphi_real,
     grid_shape: np.ndarray[delphi_int],
@@ -263,7 +262,7 @@ class Surface:
             grid_shape_device = cuda.to_device(self.grid_shape)
             surface_map_1d_device = cuda.to_device(self.surface_map_1d)
             grad_surface_map_1d_device = cuda.to_device(grad_surface_map_1d)
-            _cuda_grad_surface_map[int(num_blocks), int(self.num_cuda_threads)](
+            _cuda_grad_surface_map[num_blocks, self.num_cuda_threads](
                 grid_spacing,
                 grid_shape_device,
                 surface_map_1d_device,

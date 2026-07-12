@@ -550,7 +550,7 @@ def calc_gaussian_density_map(
         ) // threads_per_block
 
         # Launch CUDA kernel
-        _cuda_calc_gaussian_density_map[int(blocks_per_grid), int(threads_per_block)](
+        _cuda_calc_gaussian_density_map[blocks_per_grid, threads_per_block](
             delphi_bool(generate_ion_exclusion_map),
             delphi_real(scale),
             delphi_real(gaussian_exponent),
@@ -1658,7 +1658,7 @@ def calc_grad_surface_map_analytical(
         voxel_map_origin_device = cuda.to_device(voxel_map_origin)
         voxel_map_shape_device = cuda.to_device(voxel_map_shape)
 
-        _cuda_calc_grad_surface_map_analytical[int(num_blocks), int(num_cuda_threads)](
+        _cuda_calc_grad_surface_map_analytical[num_blocks, num_cuda_threads](
             gaussian_exponent,
             delphi_real(grid_spacing),  # Pass scalar directly
             srfdensityexp,  # Pass scalar directly
@@ -1740,7 +1740,7 @@ def calc_gaussian_like_surface(
         ) // num_cuda_threads
         gauss_density_solvent_1d_device = cuda.to_device(gauss_density_solvent_1d)
         surface_map_1d_device = cuda.to_device(surface_map_1d)
-        _cuda_calc_gaussian_like_surface[int(num_blocks), int(num_cuda_threads)](
+        _cuda_calc_gaussian_like_surface[num_blocks, num_cuda_threads](
             surf_den_exp_scaled,
             delphi_real(APPROX_ZERO),  # Ensure approx_zero is correct type
             gauss_density_solvent_1d_device,

@@ -1,7 +1,7 @@
 # 🧩 pyDelPhi: A Modern, High-Performance Poisson–Boltzmann Solver
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Python](https://img.shields.io/badge/Python-3.13-green.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-green.svg)](https://www.python.org/)
 [![CUDA](https://img.shields.io/badge/CUDA-12.0%2B-yellow.svg)](https://developer.nvidia.com/cuda-toolkit)
 [![Numba](https://img.shields.io/badge/Accelerated%20by-Numba-lightgrey.svg)](https://numba.pydata.org/)
 
@@ -13,16 +13,17 @@
 
 ## ✨ Key Features
 
-- **Physics-Faithful Reimplementation**
+- **Methodologically Consistent Reimplementation**
   - Fully compatible with DelPhi 8.5 reference outputs.
   - Validated across protein, nucleic-acid, and viral capsid benchmarks.
 
 - **High-Performance Backends**
   - CPU parallelization via `Numba` and `prange`.
-  - GPU acceleration through custom CUDA kernels optimized for A100-class devices.
+  - GPU acceleration through CUDA kernels.
 
 - **Model Support**
   - Linear and nonlinear PB formulations.
+  - Classical and Regularized PB formalisms.
   - Traditional two-dielectric and Gaussian dielectric models.
   - Cubic and cuboidal grid geometries with automatic padding control.
 
@@ -38,12 +39,14 @@
 ## ⚙️ Installation
 
 ### Requirements
-- Python >= 3.13,<3.14
-- NumPy >= 2.3.5,<2.4
-- Numba >= 0.62.1,<0.63
-- CUDA Toolkit >= 12.0 and an NVIDIA GPU/driver (optional for GPU backend)
+- Python = 3.12  
+- CUDA Toolkit ≥ 12.0 (optional for GPU backend)
 
-NetCDF trajectory support uses `netCDF4`. To avoid native-library and ABI conflicts, both `netCDF4` and the optional `numba-cuda` backend are managed through Conda in the supplied environment files.
+Core dependencies:
+```bash
+numpy >= 2.2.2,<2.3
+numba >= 0.61.2,<0.62
+```
 
 Optional (profiling / plots):
 ```bash
@@ -56,38 +59,24 @@ psutil
 
 ## 🧩 Recommended Environment Setup
 
-A dedicated Conda or Miniconda environment is **strongly recommended**. The source distribution includes environment files for CPU/NetCDF and CUDA installations.
+To ensure stable operation and avoid dependency conflicts, it is **strongly recommended** to install **pyDelPhi** inside a **dedicated Conda or Miniconda environment**.  
+Use a **versioned environment name** for clarity and reproducibility, for example:
 
-### CPU and NetCDF
 ```bash
-conda env create -f environment.yml
-conda activate pydelphi
-python -m pip install . --no-deps
+conda create -n py312_pydelphi_v0_2_0 python=3.12
+conda activate py312_pydelphi_v0_2_0
 ```
 
-### CUDA and NetCDF
-```bash
-conda env create -f environment-cuda.yml
-conda activate pydelphi-cuda
-python -m pip install . --no-deps
-```
-
-The CUDA environment installs `numba-cuda` through Conda. A compatible NVIDIA driver is still required on the host system.
-
-### From a Git Checkout
+### From Source
 ```bash
 git clone https://github.com/delphi001/pyDelPhi.git
 cd pyDelPhi
-conda env create -f environment.yml
-conda activate pydelphi
-python -m pip install -e . --no-deps
+pip install .
 ```
-
-Use editable installation (`-e`) only for development. For a released source distribution, use the normal non-editable installation shown above.
 
 Verify installation:
 ```bash
-pydelphi-static --version
+python -m pydelphi --version
 ```
 
 ---
@@ -96,14 +85,12 @@ pydelphi-static --version
 
 ### 🔹 Command-Line Usage (Recommended for End Users)
 
-pyDelPhi provides five primary executables:
+pyDelPhi provides three primary executables:
 
 | Command | Purpose |
 |----------|----------|
 | `pydelphi-static` | Run a single Poisson–Boltzmann (PB) electrostatics calculation |
-| `pydelphi-trajectory` | Run PB calculations over a molecular trajectory |
-| `pydelphi-test` | Execute static-mode regression and consistency tests |
-| `pydelphi-test-traj` | Execute trajectory-mode regression tests |
+| `pydelphi-test` | Execute regression and consistency tests |
 | `pydelphi-help` | Access built-in documentation and parameter reference |
 
 ---
@@ -140,32 +127,7 @@ usage: pydelphi_static.py [-h] [-V] [-P {cpu,cuda}] [-p {single,double}]
 
 Example:
 ```bash
-pydelphi-static -f examples/5tif/param_5tif_linear_trad.prm -P cpu -p double -t 4 -l 5TIF -O
-```
-
----
-
-#### 🎞️ `pydelphi-trajectory` — Trajectory PB Calculations
-
-Run PB calculations over frames from a molecular trajectory:
-```bash
-pydelphi-trajectory -f trajectory_params.inp -P cpu -p double -t 4 -O
-```
-
-**Usage**
-```
-usage: pydelphi-trajectory.py [-h] [-V] [-P {cpu,cuda}] [-p {single,double}]
-                              [-t THREADS] [-d DEVICE_ID] [-f PARAM_FILE]
-                              [-v {critical,error,notice,warning,info,verbose,debug,trace}]
-                              [-l LABEL] [-o OUTFILE] [-O] [-S]
-```
-
-The command uses the same platform, precision, threading, output, and logging options as `pydelphi-static`. The parameter file additionally defines the trajectory input and its associated topology. Use the built-in help to inspect the relevant parameter definitions and aliases:
-
-```bash
-pydelphi-trajectory --help
-pydelphi-help --list-param-names
-pydelphi-help -g infile
+pydelphi-static -f examples/1CRN_params.inp -P cuda -p double -t 64 -l 1CRN
 ```
 
 ---
@@ -201,44 +163,9 @@ This ensures clean, reproducible regression runs across heterogeneous environmen
 
 ---
 
-#### 🧪 `pydelphi-test-traj` — Trajectory Regression Suite
-
-Run the dedicated trajectory regression tests:
-
-```bash
-pydelphi-test-traj --help
-```
-
-**Usage**
-```
-usage: pydelphi-test-traj [-h] [--no-cuda] [--no-parallel] [--no-single]
-                           [--no-double] [--timeout TIMEOUT] [--verbose]
-                           [--debug-files]
-```
-
-| Flag | Description |
-|------|-------------|
-| `-h`, `--help` | Show help and exit |
-| `--no-cuda` | Skip CUDA configurations |
-| `--no-parallel` | Skip configurations using more than one thread |
-| `--no-single` | Skip single-precision configurations |
-| `--no-double` | Skip double-precision configurations |
-| `--timeout TIMEOUT` | Set the per-run timeout in seconds |
-| `--verbose` | Print additional progress information |
-| `--debug-files` | Preserve generated parameter files and computed TSV outputs under `pydelphi_traj_debug_files/` and record their full paths in the report |
-
-Example:
-```bash
-pydelphi-test-traj --no-cuda --timeout 300
-```
-
-By default, temporary trajectory-test files are deleted and only their filenames are recorded. Use `--debug-files` when diagnosing failed cases or inspecting generated inputs and outputs.
-
----
-
 #### 📘 `pydelphi-help` — Built-in Parameter Documentation
 
-Interactive access to parameter definitions, function-style input constructs, defaults, and references.
+Interactive access to parameter definitions, defaults, and references.
 
 ```bash
 pydelphi-help -h
@@ -246,30 +173,19 @@ pydelphi-help -h
 
 **Usage**
 ```
-usage: pydelphi-help [-h] [-g GROUP] [-n PARAM_NAME] [-ln] [-lg]
+usage: pydelphi-help [-g group] [-n param_name]
 ```
 
 | Flag | Description |
-|------|-------------|
+|------|--------------|
+| `-g`, `--group` | Print help for all parameters in a group |
+| `-n`, `--param-name` | Show detailed help for one parameter (supports aliases) |
 | `-h`, `--help` | Show this message and exit |
-| `-g`, `--group GROUP` | Print help for parameters in a group |
-| `-n`, `--param-name PARAM_NAME` | Print help for a parameter or function-style help topic |
-| `-ln`, `--list-param-names` | List valid parameter and function help topics |
-| `-lg`, `--list-groups` | List valid parameter groups |
-
-Help topics use the following convention:
-
-- `name` for a statement-style parameter, such as `grid_size`.
-- `function` for a selector-free function, such as `zeta` for `zeta(...)`.
-- `function__namedattr` for a function-style construct, such as `in__crgsiz` for `in(crgsiz, ...)`.
 
 Examples:
 ```bash
-pydelphi-help -n grid_size
-pydelphi-help -n in__crgsiz
-pydelphi-help -g infile
-pydelphi-help --list-param-names
-pydelphi-help --list-groups
+pydelphi-help -g grid
+pydelphi-help -n surfmethod
 ```
 
 **Sample Output**
@@ -302,7 +218,6 @@ This mirrors the same flow as the CLI driver — parsing parameters, configuring
 and executing the solver under a specified platform and precision context.
 
 **Example:**
-
 ```python
 from pydelphi.app.delphi import DelphiApp
 from pydelphi.foundation.platforms import Platform
@@ -333,10 +248,9 @@ Comprehensive benchmarking of **pyDelPhi** — including accuracy validation,
 runtime scaling, and memory efficiency across datasets **pm74**, **pp46**, **pd66**,  
 and viral capsid systems — is detailed in the accompanying publication:
 
-> **Panday, S. K.; Zhao, S.; Alexov, E.**  
-> *Accurate and Scalable Continuum Electrostatics for Large Biomolecular Systems: The pyDelPhi Poisson–Boltzmann Framework.*  
-> **J. Chem. Inf. Model.** 2026, **66** (1), 488–502.  
-> DOI: [10.1021/acs.jcim.5c02818](https://doi.org/10.1021/acs.jcim.5c02818)
+> **Pandey, S. K. et al. (2025)**  
+> *Accurate and Scalable Continuum Electrostatics for Large Biomolecular Systems: The pyDelPhi Poisson--Boltzmann Framework*  
+> *(manuscript in preparation)*
 
 The benchmarks compare pyDelPhi against the original **DelPhi (C++)** implementation,  
 demonstrating numerical equivalence and substantial acceleration on both CPU and GPU platforms.
@@ -353,7 +267,7 @@ pydelphi/
  ├── data/           # Reference datasets and test examples (1he8, 5tif, sphere, etc.)
  ├── energy/         # Energy term calculators (Coulombic, Reaction Field, Nonpolar)
  ├── foundation/     # Core enums, context management, and platform abstractions
- ├── scripts/        # CLI tools (static, trajectory, help, and tests)
+ ├── scripts/        # CLI tools (pydelphi-static, pydelphi-help)
  ├── site/           # Site generation and file writing utilities
  ├── solver/         # PB solvers (linear, nonlinear, SOR, NWT, RPBE)
  ├── space/          # Dielectric and grid-space generation (VDW, SAS, Gaussian)
@@ -405,11 +319,9 @@ def main():
 
     # 2. Handle version or input validation
     if args.version:
-        print_pydelphi_version_info();
-        exit(1)
+        print_pydelphi_version_info(); exit(1)
     if not args.param_file:
-        print("Error: Parameter file required.");
-        exit(1)
+        print("Error: Parameter file required."); exit(1)
 
     # 3. Configure output and runtime
     check_output_file(args.outfile, args.overwrite)
@@ -453,7 +365,6 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 1. **Run validation suite locally:**
    ```bash
    pydelphi-test --no-cuda
-   pydelphi-test-traj --no-cuda
    ```
    (use `--no-double` or `--no-single` to isolate precision tests)
 
@@ -467,9 +378,9 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
    pydelphi-help -n <param_name>
    ```
 
-4. **Validate numerical changes:**  
-   Run the regression suites against the reference data in  
-   `pydelphi/data/test_cases/`. These files support correctness and reproducibility checks; they are not the published performance-benchmark dataset. For runtime, scaling, and large-system benchmark results, see the pyDelPhi publication cited below.
+4. **Benchmark changes:**  
+   Compare solver time and energy RMSD against DelPhi reference TSVs in  
+   `pydelphi/data/test_examples/`.
 
 ---
 
@@ -487,10 +398,9 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 
 If you use pyDelPhi in your work, please cite:
 
-> **Panday, S. K.; Zhao, S.; Alexov, E.**  
-> *Accurate and Scalable Continuum Electrostatics for Large Biomolecular Systems: The pyDelPhi Poisson–Boltzmann Framework.*  
-> **J. Chem. Inf. Model.** 2026, **66** (1), 488–502.  
-> DOI: [10.1021/acs.jcim.5c02818](https://doi.org/10.1021/acs.jcim.5c02818)
+> **Pandey, S. K. et al. (2025)**  
+> *Accurate and Scalable Continuum Electrostatics for Large Biomolecular Systems: The pyDelPhi Poisson--Boltzmann Framework*  
+> *(manuscript in preparation)*
 
 ---
 

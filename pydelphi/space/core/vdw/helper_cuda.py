@@ -17,15 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
-#
-# PyDelphi is free software: you can redistribute it and/or modify
-# (at your option) any later version.
-#
-# PyDelphi is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-#
-
 
 """
 GPU-accelerated algorithm for building a zeta surface map using CUDA.
@@ -67,7 +58,7 @@ This strategy is optimized to minimize slow global memory access by using
 fast shared memory for intermediate, block-local results and ensures that the
 final write to global memory is fully parallel and free of race conditions.
 """
-
+from Cython.Shadow import nogil, boundscheck
 from numba import cuda, float32, int32, bool_, njit
 import numpy as np
 import numba
@@ -75,7 +66,7 @@ import numba
 TPB = 32  # Threads per block - adjust based on your GPU
 
 
-@cuda.jit
+@cuda.jit(cache=True)
 def _build_block_local_binary_map_cuda(
     grid_shape_d,
     zeta_surface_map_1d_d,
@@ -198,7 +189,7 @@ def _build_block_local_binary_map_cuda(
     cuda.syncthreads()
 
 
-@cuda.jit
+@cuda.jit(cache=True)
 def _count_zeta_points_per_block_cuda(binary_map_shared, block_counts):
     """Step 2: Count zeta points per block."""
     count = 0
@@ -208,7 +199,7 @@ def _count_zeta_points_per_block_cuda(binary_map_shared, block_counts):
     block_counts[cuda.blockIdx.x] = count
 
 
-@cuda.jit
+@cuda.jit(cache=True)
 def _write_zeta_points_with_offset_cuda(
     grid_shape_d,
     grid_spacing,
@@ -280,7 +271,7 @@ def _write_zeta_points_with_offset_cuda(
         out_coords_d[global_index, 2] = xyz[2]
 
 
-@njit
+@njit(nogil=True, boundscheck=False, cache=True)
 def build_zeta_surface_map_cuda_parallel_block(
     grid_spacing,
     grid_shape,
@@ -311,7 +302,7 @@ def build_zeta_surface_map_cuda_parallel_block(
         index_discrete_epsilon_map_1d.astype(np.int32)
     )
 
-    block_counts = cuda.device_array(num_blocks, dtype=np.int32)
+    block_counts = cuda.to_device(np.zeros(num_blocks, dtype=np.int32))
     binary_map_shared = cuda.shared.array(block_dim, dtype=np.uint8)
 
     x_stride = grid_shape[1] * grid_shape[2]
@@ -330,7 +321,7 @@ def build_zeta_surface_map_cuda_parallel_block(
         grid_y = (block_index // grid_dim_x) % grid_dim_y
         grid_z = block_index // (grid_dim_x * grid_dim_y)
         current_block = (grid_x, grid_y, grid_z)
-        _build_block_local_binary_map_cuda[int(current_block), int(block_dim)](
+        _build_block_local_binary_map_cuda[current_block, block_dim](
             grid_shape_d,
             zeta_surface_map_1d_d,
             index_discrete_epsilon_map_1d_d,
@@ -348,7 +339,7 @@ def build_zeta_surface_map_cuda_parallel_block(
 
     # Step 2: Count zeta points per block
     count_grid_dim = (num_blocks + TPB - 1) // TPB
-    _count_zeta_points_per_block_cuda[int(count_grid_dim), int(TPB)](
+    _count_zeta_points_per_block_cuda[count_grid_dim, TPB](
         binary_map_shared, block_counts
     )
 
@@ -360,8 +351,8 @@ def build_zeta_surface_map_cuda_parallel_block(
     total_points = np.sum(block_counts_host)
 
     # Step 4: Write to global output arrays with offsets
-    out_coords_d = cuda.device_array((total_points, 3), dtype=np.float32)
-    out_indices_d = cuda.device_array((total_points, 3), dtype=np.int32)
+    out_coords_d = cuda.to_device(np.zeros((total_points, 3), dtype=np.float32))
+    out_indices_d = cuda.to_device(np.zeros((total_points, 3), dtype=np.int32))
 
     for block_index in range(num_blocks):
         start_index = block_index * elements_per_block
@@ -371,7 +362,7 @@ def build_zeta_surface_map_cuda_parallel_block(
         grid_z = block_index // (grid_dim_x * grid_dim_y)
         current_block = (grid_x, grid_y, grid_z)
         _build_block_local_binary_map_cuda[
-            int(current_block), int(block_dim)
+            current_block, block_dim
         ](  # Re-run to have binary map in shared memory
             grid_shape_d,
             zeta_surface_map_1d_d,
@@ -387,7 +378,7 @@ def build_zeta_surface_map_cuda_parallel_block(
             np.int32(y_stride_x_3),
             np.int32(z_stride_x_3),
         )
-        _write_zeta_points_with_offset_cuda[int(current_block), int(block_dim)](
+        _write_zeta_points_with_offset_cuda[current_block, block_dim](
             grid_shape_d,
             grid_spacing,
             gridbox_center_d,

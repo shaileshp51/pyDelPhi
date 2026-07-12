@@ -45,7 +45,7 @@ global runtime configuration.
 import time
 import numpy as np
 
-from numba import set_num_threads, njit, cuda
+from numba import set_num_threads, njit
 
 from pydelphi.foundation.enums import (
     Precision,
@@ -158,10 +158,6 @@ class NLNewtonPBESolver:
         self.n_grad_map_points = self.num_grid_points * 3
         # Allocate and init with zero maps_3d and grad_maps_4d
         self.grid_charge_map_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
-        self.final_rms = None
-        self.final_dphi = None
-        self.total_iters = 0
-        self.convergence_status = None
 
     def _prepare_charge_neighbor_epsmids_sum_to_iterate(
         self,
@@ -244,7 +240,7 @@ class NLNewtonPBESolver:
 
             # Launch the CUDA kernel with appropriate grid and block configuration
             _cuda_prepare_charge_neigh_eps_sum_to_iterate[
-                int(n_blocks), int(self.num_cuda_threads)
+                n_blocks, self.num_cuda_threads
             ](
                 vacuum,
                 exdi,
@@ -415,12 +411,6 @@ class NLNewtonPBESolver:
                 disable_stagnation_check=False,
             )
 
-            status_label = (
-                "UNKNOWN",
-                "CONVERGED_THRESH",
-                "CONVERGED_STAG",
-                "DIVERGED",
-            )
             if stop_iters:
                 if status == 1 and verbose:
                     vprint(
@@ -446,7 +436,7 @@ class NLNewtonPBESolver:
         _copy_to_full(phimap_current_1d, phi_even_1d, 0, 2)
         _copy_to_full(phimap_current_1d, phi_odd_1d, 1, 2)
 
-        return rmsd, dphi_tol, total_iter, status_label[status]
+        return rmsd, dphi_tol, total_iter
 
     def _cuda_solve_nonlinear_pb_nwt(
         self,
@@ -563,9 +553,7 @@ class NLNewtonPBESolver:
                         cuda.synchronize()
 
                         # Last odd iteration → fused RMSD kernel
-                        _cuda_iterate_nwt_with_dphi_rmsd[
-                            int(n_blocks), int(num_cuda_threads)
-                        ](
+                        _cuda_iterate_nwt_with_dphi_rmsd[n_blocks, num_cuda_threads](
                             vacuum,
                             even_odd,
                             non_zero_salt,
@@ -586,7 +574,7 @@ class NLNewtonPBESolver:
                         cuda.synchronize()
                     else:
                         # Regular iteration
-                        _cuda_iterate_nwt[int(n_blocks), int(num_cuda_threads)](
+                        _cuda_iterate_nwt[n_blocks, num_cuda_threads](
                             vacuum,
                             even_odd,
                             non_zero_salt,
@@ -634,12 +622,6 @@ class NLNewtonPBESolver:
                 disable_stagnation_check=False,
             )
 
-            status_label = (
-                "UNKNOWN",
-                "CONVERGED_THRESH",
-                "CONVERGED_STAG",
-                "DIVERGED",
-            )
             if stop_iters:
                 if status == 1:
                     vprint(
@@ -667,7 +649,7 @@ class NLNewtonPBESolver:
         _copy_to_full(phimap_current_1d, phi_even_1d, 0, 2)
         _copy_to_full(phimap_current_1d, phi_odd_1d, 1, 2)
 
-        return rmsd, max_delta_phi, total_iter, status_label[status]
+        return rmsd, max_delta_phi, total_iter
 
     def _solve_nonlinear_pb_nwt(
         self,
@@ -712,28 +694,26 @@ class NLNewtonPBESolver:
             #     "CUDA: salt penalty mean:", np.mean(salt_ions_solvation_penalty_map_1d)
             # )
 
-            rmsd, max_change, total_iter, convrg_status = (
-                self._cuda_solve_nonlinear_pb_nwt(
-                    vacuum=vacuum,
-                    phimap_current_1d=phimap_current_1d,
-                    non_zero_salt=non_zero_salt,
-                    approx_zero=approx_zero,
-                    omega_adaptive=omega_adaptive,
-                    grid_shape=grid_shape,
-                    salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
-                    epsmap_midpoints_1d=epsmap_midpoints_1d,
-                    eps_midpoint_neighs_sum_only_1d=eps_midpoint_neighs_sum_only_1d,
-                    boundary_flags_1d=boundary_flags_1d,
-                    charge_map_1d=charge_map_1d,
-                    ion_exclusion_map_1d=ion_exclusion_map_1d,
-                    itr_block_size=itr_block_size,
-                    max_nonlinear_iters=max_nonlinear_iters,
-                    rms_tol=max_rms,
-                    dphi_tol=max_dphi,
-                    check_dphi=check_dphi,
-                    num_cuda_threads=num_cuda_threads,
-                    verbosity_level=verbosity_level,
-                )
+            rmsd, max_change, total_iter = self._cuda_solve_nonlinear_pb_nwt(
+                vacuum=vacuum,
+                phimap_current_1d=phimap_current_1d,
+                non_zero_salt=non_zero_salt,
+                approx_zero=approx_zero,
+                omega_adaptive=omega_adaptive,
+                grid_shape=grid_shape,
+                salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
+                epsmap_midpoints_1d=epsmap_midpoints_1d,
+                eps_midpoint_neighs_sum_only_1d=eps_midpoint_neighs_sum_only_1d,
+                boundary_flags_1d=boundary_flags_1d,
+                charge_map_1d=charge_map_1d,
+                ion_exclusion_map_1d=ion_exclusion_map_1d,
+                itr_block_size=itr_block_size,
+                max_nonlinear_iters=max_nonlinear_iters,
+                rms_tol=max_rms,
+                dphi_tol=max_dphi,
+                check_dphi=check_dphi,
+                num_cuda_threads=num_cuda_threads,
+                verbosity_level=verbosity_level,
             )
         else:
             if DEBUG >= _VERBOSITY:
@@ -750,28 +730,26 @@ class NLNewtonPBESolver:
                     f"CPU: salt penalty mean: {sionmean}",
                 )
 
-            rmsd, max_change, total_iter, convrg_status = (
-                self._cpu_solve_nonlinear_pb_nwt(
-                    vacuum=vacuum,
-                    phimap_current_1d=phimap_current_1d,
-                    non_zero_salt=non_zero_salt,
-                    approx_zero=approx_zero,
-                    omega_adaptive=omega_adaptive,
-                    grid_shape=grid_shape,
-                    salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
-                    epsilon_map_midpoints_1d=epsmap_midpoints_1d,
-                    epsilon_sum_neighbors_sum_only_1d=eps_midpoint_neighs_sum_only_1d,
-                    boundary_flags_1d=boundary_flags_1d,
-                    charge_map_1d=charge_map_1d,
-                    ion_exclusion_map_1d=ion_exclusion_map_1d,
-                    itr_block_size=itr_block_size,
-                    max_nonlinear_iters=max_nonlinear_iters,
-                    rms_tol=max_rms,
-                    dphi_tol=max_dphi,
-                    check_dphi=check_dphi,
-                    num_cpu_threads=num_cpu_threads,
-                    verbose=verbosity_level,
-                )
+            rmsd, max_change, total_iter = self._cpu_solve_nonlinear_pb_nwt(
+                vacuum=vacuum,
+                phimap_current_1d=phimap_current_1d,
+                non_zero_salt=non_zero_salt,
+                approx_zero=approx_zero,
+                omega_adaptive=omega_adaptive,
+                grid_shape=grid_shape,
+                salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
+                epsilon_map_midpoints_1d=epsmap_midpoints_1d,
+                epsilon_sum_neighbors_sum_only_1d=eps_midpoint_neighs_sum_only_1d,
+                boundary_flags_1d=boundary_flags_1d,
+                charge_map_1d=charge_map_1d,
+                ion_exclusion_map_1d=ion_exclusion_map_1d,
+                itr_block_size=itr_block_size,
+                max_nonlinear_iters=max_nonlinear_iters,
+                rms_tol=max_rms,
+                dphi_tol=max_dphi,
+                check_dphi=check_dphi,
+                num_cpu_threads=num_cpu_threads,
+                verbose=verbosity_level,
             )
 
         vprint(
@@ -780,7 +758,7 @@ class NLNewtonPBESolver:
             f"    PBE> Nonlinear solver finished after {total_iter} iterations",
         )
 
-        return rmsd, max_change, total_iter, convrg_status
+        return rmsd, max_change, total_iter
 
     def solve_pbe(
         self,
@@ -1029,7 +1007,7 @@ class NLNewtonPBESolver:
         # It also handles the allocation and initialization of its working even/odd arrays.
         # We pass the initial potential (phimap_current_1d) and all necessary parameters.
         # The potential is updated in-place within phimap_current_1d.
-        (rmsd, max_change, total_iter, convrg_status) = self._solve_nonlinear_pb_nwt(
+        self._solve_nonlinear_pb_nwt(
             vacuum=vacuum,
             phimap_current_1d=phimap_current_1d,
             non_zero_salt=non_zero_salt,
@@ -1052,11 +1030,6 @@ class NLNewtonPBESolver:
             num_cpu_threads=self.platform.names["cpu"]["num_threads"],
             verbosity_level=self.verbosity,
         )
-
-        self.final_rms = rmsd
-        self.final_dphi = max_change
-        self.total_iters = total_iter
-        self.convergence_status = convrg_status
 
         toc_total = time.perf_counter()
         self.timings[f"pb, {self.phase}| total time"] = "{:0.3f}".format(
@@ -1158,7 +1131,7 @@ class NLNewtonPBESolver:
                 phimap_1d_device = cuda.to_device(phimap_1d)
                 # CALL: CUDA kernel for the computation
                 _cuda_setup_coulombic_boundary_condition[
-                    int(n_blocks), int(self.num_cuda_threads)
+                    n_blocks, self.num_cuda_threads
                 ](
                     vacuum,
                     grid_spacing,
@@ -1229,7 +1202,7 @@ class NLNewtonPBESolver:
                     phimap_1d_device = cuda.to_device(phimap_1d)
                     # CALL: CUDA kernel for the computation
                     _cuda_setup_dipolar_boundary_condition[
-                        int(n_blocks), int(self.num_cuda_threads)
+                        n_blocks, self.num_cuda_threads
                     ](
                         delphi_bool(vacuum),
                         delphi_bool(has_pve_charges),

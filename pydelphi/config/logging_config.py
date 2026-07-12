@@ -41,7 +41,7 @@ ERROR = _VL.ERROR.int_value  # 40
 NOTICE = _VL.NOTICE.int_value  # 35
 WARNING = _VL.WARNING.int_value  # 30
 INFO = _VL.INFO.int_value  # 20
-VERBOSE = _VL.VERBOSE.int_value  # 15
+VERBOSE = _VL.VERBOSE.int_value # 15
 DEBUG = _VL.DEBUG.int_value  # 10
 TRACE = _VL.TRACE.int_value  # 5
 
@@ -81,8 +81,6 @@ _MODULE_VERBOSITY_SETTINGS = {
     "foundation.enumbase": NOTICE,
     "foundation.enums": NOTICE,
     "foundation.platforms": NOTICE,
-    # geometry
-    "geometry.nonpolar": NOTICE,
     # site
     "site.site": NOTICE,
     "site.siteexceptions": NOTICE,

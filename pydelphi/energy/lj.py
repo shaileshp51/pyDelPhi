@@ -432,7 +432,7 @@ def _cuda_calc_lj_energy(platform: Platform, atoms_data: np.ndarray) -> np.float
         raise  # Re-raise critical error
 
     # Launch kernel
-    _cuda_lj_energy_kernel[int(blocks_per_grid), int(threads_per_block)](
+    _cuda_lj_energy_kernel[blocks_per_grid, threads_per_block](
         atoms_data_device, energy_block_device
     )
     cuda.synchronize()  # Wait for completion

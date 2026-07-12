@@ -151,41 +151,6 @@ class ParamType(BaseInfoEnum):
     FUNCTION = 2, "Function-style parameter like 'param(category, attr=value)'."
 
 
-class ParamStatus(BaseInfoEnum):
-    """Lifecycle status for input parameters, functions, attributes, and values.
-
-    Status flow:
-        EXPERIMENTAL/SUPPORTED -> DEPRECATED -> RETIRED
-
-    A new interface may debut directly as SUPPORTED when it is considered
-    stable, or as EXPERIMENTAL when it is intentionally exposed before the
-    interface or behavior is finalized.
-    """
-
-    EXPERIMENTAL = (
-        1 << 0,
-        "Available for use, but the interface or behavior may change. "
-        "Parser/help should clearly mark it as experimental.",
-    )
-
-    SUPPORTED = (
-        1 << 1,
-        "Supported interface. No special parser or help message is needed.",
-    )
-
-    DEPRECATED = (
-        1 << 2,
-        "Still accepted for compatibility, but discouraged. Parser/help should "
-        "warn and compatibility behavior may be used.",
-    )
-
-    RETIRED = (
-        1 << 3,
-        "Recognized but no longer supported. It should be reported as ignored "
-        "or no longer supported, and should abort if required.",
-    )
-
-
 class BioModel(BaseInfoEnum):
     """Enumerates formulations of the Poisson-Boltzmann equation."""
 

@@ -97,54 +97,15 @@ def _calculate_phase_independent_energies(
     # --- Nonpolar Energy (if truly phase-independent in calculation) ---
     if erg_settings.calculate_nonpolar:
         tic_nonpolar = perf_counter()
-        (
-            cavity_volume,
-            total_volume,
-            solute_surface_area,
-            energy_solute_surface_area,
-            energy_cavity_volume,
-        ) = calc_nonpolar_energy(
-            atom_data=ctx.atoms_data,
-            atom_adjacency_csr=ctx.adjacency_map,
-            probe_radius=ctx.probe_radius,
-            radius_offset=ctx.radius_offset,
-            temperature=ctx.temperature,
-            pressure_coeff=ctx.pressure_coeff,
-            T_ref=298.0,
-            sentinel_adj=-1,
+        nonpolar_energy = calc_nonpolar_energy(
+            # ctx.atoms_data,
+            # ctx.surface_area,  # Assuming ctx has pre-computed surface area
+            # erg_settings.surface_tension,  # From config
         )
-
-        nonpolar_energy = energy_solute_surface_area + energy_cavity_volume
-        results.add_energy(
-            "phase_independent",
-            "nonpolar_energy_surface_area",
-            energy_solute_surface_area,
-        )
-        results.add_energy(
-            "phase_independent", "nonpolar_energy_cavity_volume", energy_cavity_volume
-        )
-        results.add_energy(
-            "phase_independent", "total_nonpolar_energy", nonpolar_energy
-        )
+        results.add_energy("phase_independent", "nonpolar_energy", nonpolar_energy)
         toc_nonpolar = perf_counter()
-
-        # print(
-        #     cavity_volume,
-        #     total_volume,
-        #     solute_surface_area,
-        #     energy_solute_surface_area,
-        #     energy_cavity_volume,
-        #     toc_nonpolar - tic_nonpolar,
-        # )
-
-        results.add_timing("phase_independent", "nonpolar_energy_surface_area", 0.0)
         results.add_timing(
-            "phase_independent",
-            "nonpolar_energy_cavity_volume",
-            toc_nonpolar - tic_nonpolar,
-        )
-        results.add_timing(
-            "phase_independent", "total_nonpolar_energy", toc_nonpolar - tic_nonpolar
+            "phase_independent", "nonpolar_energy", toc_nonpolar - tic_nonpolar
         )
 
 
@@ -291,7 +252,7 @@ def calculate_all_energies(
     if not final:
         results.set_finalized(False)
 
-    if not results.energies["phase_independent"] and not vacuum:
+    if not results.energies["phase_independent"]:
         _calculate_phase_independent_energies(ctx, erg_settings)
 
     if vacuum:
@@ -426,11 +387,11 @@ def calculate_all_energies(
 
         if (
             "corrected_reaction_field_energy" in results.energies["total"]
-            and "total_nonpolar_energy" in results.energies["phase_independent"]
+            and "nonpolar_energy" in results.energies["phase_independent"]
         ):
             overall_solvation_energy = results.get_energy(
                 "total", "corrected_reaction_field_energy"
-            ) + results.get_energy("phase_independent", "total_nonpolar_energy")
+            ) + results.get_energy("phase_independent", "nonpolar_energy")
             results.add_energy(
                 "total", "overall_solvation_energy", overall_solvation_energy
             )

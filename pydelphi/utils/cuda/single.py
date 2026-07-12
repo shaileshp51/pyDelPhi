@@ -17,6 +17,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
+#
+# PyDelphi is free software: you can redistribute it and/or modify
+# (at your option) any later version.
+#
+# PyDelphi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#
 
 """
 This module defines CUDA kernels for accessing and manipulating single-precision

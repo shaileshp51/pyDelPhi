@@ -270,7 +270,6 @@ class EnergyResults:
                              - timing_message (str): The full formatted timing report.
                              - energy_message (str): The full formatted energy report.
         """
-        # print(self.timings)
         indent = " " * indent_spaces
         field_format = f"{{:{field_width}{format_specifier}}}"
         timing_lines = []
@@ -388,7 +387,6 @@ class EnergyResults:
         # --- Energy Report ---
         # Print ALL computed phase-independent energies
         if self.energies["phase_independent"]:
-            # print(self.energies["phase_independent"], self.timings["phase_independent"])
             for component, value in self.energies["phase_independent"].items():
                 component_time = self.get_timing("phase_independent", component)
                 component_format = component.replace("_", " ").capitalize()

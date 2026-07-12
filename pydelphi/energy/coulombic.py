@@ -22,7 +22,7 @@ import math
 import numpy as np
 from numba import njit, prange, get_num_threads, set_num_threads, cuda, float64
 
-from pydelphi.config.logging_config import DEBUG, get_effective_verbosity
+from pydelphi.config.logging_config import DEBUG
 from pydelphi.foundation.platforms import Platform
 from pydelphi.config.global_runtime import delphi_real, vprint
 from pydelphi.constants import ConstDelPhiFloats
@@ -48,9 +48,6 @@ LEN_XYZCHARGE = 4
 MAX_BLOCKS_DIM = 256  # used only when computing tile size
 THREADS_PER_BLOCK = 256  # 1D block size; tune (128/256/512) depending on GPU
 # Note: choose THREADS_PER_BLOCK such that THREADS_PER_BLOCK <= device max threads per block
-
-_MODULE_NAME = __name__
-_VERBOSITY = get_effective_verbosity(_MODULE_NAME)
 
 
 # --- CPU kernel (unchanged) ---
@@ -209,7 +206,7 @@ def _cuda_calc_coulombic_energy(
     )
 
     # Launch kernel: each thread computes contributions for some i's in grid-stride
-    _cuda_coulombic_energy_kernel_soa[int(blocks), int(threads_per_block)](
+    _cuda_coulombic_energy_kernel_soa[blocks, threads_per_block](
         x_dev, y_dev, z_dev, q_dev, energy_block_device, np.int32(n_atoms)
     )
 
@@ -268,7 +265,7 @@ def calc_coulombic_energy(
         raw_energy_sum = _cuda_calc_coulombic_energy(platform, atoms_data_slice_xyzq)
 
     elif platform.active == "cpu":
-        vprint(DEBUG, _VERBOSITY, f"Number of threads used: {get_num_threads()}")
+        vprint(DEBUG, 0, f"Number of threads used: {get_num_threads()}")
         set_num_threads(platform.names["cpu"]["num_threads"])
         raw_energy_sum = _cpu_coulombic_energy_kernel(atoms_data_cast)
 
