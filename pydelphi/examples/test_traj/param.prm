@@ -1,0 +1,10 @@
+gridbox_type = cuboidal
+gridbox_margin = 25
+indi = 1
+exdi = 80
+bndcon = dipolar
+maxc = 0.0001
+
+energy(g,polar,c)
+in(crgsiz,name="amber-ff14sb-mbondi3-set",mode="override")
+in(modpdb4,file="FILE_PQR",format=pqr)

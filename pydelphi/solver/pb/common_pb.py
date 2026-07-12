@@ -104,9 +104,9 @@ elif PRECISION.value == Precision.DOUBLE.value:
         # print("No Cuda")
 
 
-@njit(nogil=True, boundscheck=False, parallel=False, cache=True)
+@njit(nogil=True, boundscheck=False, parallel=True, cache=True)
 def _cpu_mark_ion_accessible_in_boundary_flags_1d(
-    ion_exclusion_map_1d: np.ndarray,  # 1=accessible, 0=excluded
+    ion_exclusion_map_1d: np.ndarray,  # 0=accessible, 1=excluded
     boundary_flags_1d: np.ndarray,  # uint8 bitmask array
 ):
     """
@@ -120,8 +120,8 @@ def _cpu_mark_ion_accessible_in_boundary_flags_1d(
     the electrostatic setup phase.
 
     Args:
-        ion_exclusion_map_1d (np.ndarray[bool or int8]):
-            1D array where `1` marks ion-accessible gridpoints and `0` marks excluded ones.
+        ion_exclusion_map_1d (np.ndarray[bool or float]):
+            1D array where `0` marks ion-accessible gridpoints and `1` marks excluded ones.
         boundary_flags_1d (np.ndarray[uint8]):
             Bitmask array storing per-gridpoint boundary and accessibility flags.
 
@@ -133,10 +133,25 @@ def _cpu_mark_ion_accessible_in_boundary_flags_1d(
     n = ion_exclusion_map_1d.shape[0]
     for ijk1d in prange(n):
         if (
-            not ion_exclusion_map_1d[ijk1d]
+            ion_exclusion_map_1d[ijk1d] == 0.0
             and (boundary_flags_1d[ijk1d] & BOX_BOUNDARY) != BOX_BOUNDARY
         ):
             boundary_flags_1d[ijk1d] |= BOX_ION_ACCESSIBLE
+
+
+@cuda.jit(cache=True)
+def _cuda_mark_ion_accessible_in_boundary_flags_1d(
+    ion_exclusion_map_1d,  # float32/float64 or uint8; uses == 0 test
+    boundary_flags_1d,  # uint8 bitmask array
+    box_boundary,  # uint8
+    box_ion_accessible,  # uint8
+):
+    i = cuda.grid(1)
+    if i < boundary_flags_1d.size:
+        f = boundary_flags_1d[i]
+        # set ION_ACCESSIBLE if ion_exclusion==0 and not a geometric box boundary point
+        if ion_exclusion_map_1d[i] == 0.0 and (f & box_boundary) != box_boundary:
+            boundary_flags_1d[i] = f | box_ion_accessible
 
 
 @njit(nogil=True, boundscheck=False, cache=True)
@@ -919,10 +934,9 @@ def _cpu_salt_ions_solvation_penalty(
     if (not vacuum) and non_zero_salt:
         # print("kappa_x_grid_spacing_wholesquare:", kappa_x_grid_spacing_wholesquare)
         if is_gaussian_diel_model:
-            penalty_factor = epkt * ((ions_valance**2) * 1 / (2.0 * ion_radius))
+            penalty_factor = epkt * ((ions_valance**2) / (2.0 * ion_radius))
             inverse_epsout = 1.0 / epsout
             for ijk1d in prange(n_grid_points):
-                # if not ion_exclusion_map_1d[ijk1d]:
                 # Note: ion_exclusion_map_1d is True/False for solvent, solute regions. It can be
                 # real number between (0.0, 1.0) for diffused interface models like (Gaussian/GCS).
                 energy_factor = 1.0 / epsilon_map_1d[ijk1d] - inverse_epsout

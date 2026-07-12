@@ -299,7 +299,7 @@ class Platform:
             ) // threads_per_block
             # Ensure kernel is available
             if "_test_cuda_kernel" in globals():
-                _test_cuda_kernel[blocks_per_grid, threads_per_block](
+                _test_cuda_kernel[blocks_per_grid, int(threads_per_block)](
                     test_array_dev, result_cu_dev
                 )
                 cuda.synchronize()

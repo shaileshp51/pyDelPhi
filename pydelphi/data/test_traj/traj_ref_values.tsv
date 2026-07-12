@@ -1,0 +1,13 @@
+# scale:=2 dielectric_model:=DielectricModel.TWODIELECTRIC bc:=BoundaryCondition.DIPOLAR solver:=PBSolver.SOR pb_approximation=PBApproximation.LINEAR indi:=1.0 exdi:=1.0 gridbox_type:=GridBoxType.CUBOIDAL probe_radius:=1.4 radius_offset:=1.4 pressure_coefficient:=1.0 salt=0.0 ions_radii:=2.0 absolute_temperature:=297.15
+# E_coul: phase_independent.coulombic_energy | E_rxn_corr_tot: total.corrected_reaction_field_energy | E_grid_tot: total.total_grid_energy
+FRAME	LABEL	E_coul	E_rxn_corr_tot	E_grid_tot
+0	peptide:system	-17509.7575	-785.6137	36456.1118
+1	peptide:system	-17492.1710	-802.3320	36534.6302
+2	peptide:system	-17472.0755	-810.4638	37332.9625
+3	peptide:system	-17504.6191	-793.7189	36649.6530
+4	peptide:system	-17563.9388	-794.8924	35963.9513
+5	peptide:system	-17495.2132	-815.7439	37281.9739
+6	peptide:system	-17482.5961	-832.4357	37313.7952
+7	peptide:system	-17479.0363	-807.6390	37293.7054
+8	peptide:system	-17477.9622	-828.6945	36220.6782
+9	peptide:system	-17450.4158	-809.3339	35986.5358

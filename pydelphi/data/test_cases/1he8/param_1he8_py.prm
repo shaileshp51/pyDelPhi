@@ -1,0 +1,33 @@
+biomodel=pbe                                                                                                                                                                             
+solver=sor
+
+surfacemethod=vdw 
+dielectricmodel=TWODIELECTRIC
+surfaceoffset=0.0
+gm=2
+sigma=1.0
+! density_cutoff=0.759
+
+scale=1.0
+percentfill=80
+! grid_size=137
+gridbox_type=cubic
+ 
+in(modpdb4,file="1he8.pqr")
+out(modpdb4,file="1he8-out-pydelphi.pqr")
+out(phi,file="phimap.phi",format=phi, prec=single)
+
+indi=1.0
+exdi=80.0
+gapdi=22.0
+
+boundary_condition=coulombic
+salt=0.0
+
+linit=5000
+! nonlinit=5000
+
+!max_rmsd=5.0e-5
+max_delta_phi=1.0e-5
+
+

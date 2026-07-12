@@ -104,6 +104,9 @@ from .application import (
     BOX_HOMO_EPSILON,
     BOX_ION_ACCESSIBLE,
     BOX_NONE,
+    NON_SOLUTE_BOUNDARY,
+    SOLUTE_BOUNDARY_ANY,
+    SOLUTE_BOUNDARY_EXTERNAL,
 )
 
 # Re-export constants from elements.py

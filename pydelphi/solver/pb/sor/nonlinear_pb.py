@@ -65,6 +65,7 @@ from pydelphi.config.logging_config import (
     ERROR,
     WARNING,
     INFO,
+    VERBOSE,
     DEBUG,
     TRACE,
     get_effective_verbosity,
@@ -112,6 +113,9 @@ from pydelphi.solver.shared.sor.base import (
     _cuda_init_relaxfactor_phimap,
     _cpu_iterate_relaxation_factor,
     _cuda_iterate_relaxation_factor,
+    _cpu_apply_salt_and_invert_denominator_inplace,
+    _cuda_invert_denominator_inplace,
+    _cuda_apply_salt_and_invert_denominator_inplace,
     _cpu_iterate_SOR,
     _cpu_iterate_SOR_odd_with_dphi_rmsd,
     _cuda_iterate_SOR,
@@ -122,6 +126,7 @@ from pydelphi.solver.shared.sor.base import (
 from pydelphi.solver.pb.common_pb import (
     _set_gridpoint_charges,
     _cpu_mark_ion_accessible_in_boundary_flags_1d,
+    _cuda_mark_ion_accessible_in_boundary_flags_1d,
     _cpu_setup_focusing_boundary_condition,
     _cpu_setup_coulombic_boundary_condition,
     _cuda_setup_coulombic_boundary_condition,
@@ -129,28 +134,7 @@ from pydelphi.solver.pb.common_pb import (
     _cuda_setup_dipolar_boundary_condition,
     _cpu_prepare_charge_neigh_eps_sum_to_iterate,
     _cuda_prepare_charge_neigh_eps_sum_to_iterate,
-    _cpu_salt_ions_solvation_penalty,
 )
-
-
-@njit(nogil=True, boundscheck=False, cache=True)
-def _add_salt_penalty_to_neigh_eps_sum(
-    vacuum: delphi_bool,
-    kappa_x_grid_spacing_wholesquare: delphi_real,
-    salt_ions_solvation_penalty_map_1d: np.ndarray[delphi_real],
-    eps_midpoint_neighs_sum_plus_salt_screening_1d: np.ndarray[delphi_real],
-    effective_ions_exclusion_map_1d: np.ndarray[delphi_real],
-):
-    if not vacuum:
-        num_grid_points = eps_midpoint_neighs_sum_plus_salt_screening_1d.shape[0]
-        for ijk1d in prange(num_grid_points):
-            eps_midpoint_neighs_sum_plus_salt_screening_1d[
-                ijk1d
-            ] += salt_ions_solvation_penalty_map_1d[ijk1d]
-            effective_ions_exclusion_map_1d[ijk1d] = (
-                salt_ions_solvation_penalty_map_1d[ijk1d]
-                / kappa_x_grid_spacing_wholesquare
-            )
 
 
 @njit(nogil=True, boundscheck=False, parallel=False, cache=True)
@@ -231,8 +215,9 @@ def _cuda_update_effective_charge_map_1d(
 
 class NLPBESolver:
     """
-    Linearized Poisson-Boltzmann Equation (LPBE) Solver class.
+    Poisson–Boltzmann Equation (PBE) Solver class.
 
+    Supports linear (LPBE) and nonlinear (NLPBE) formulations with CPU and CUDA backends.
     This class manages the setup and execution of the PBE solver,
     handling both CPU and CUDA implementations. It initializes necessary
     data structures, prepares for iterations, calculates relaxation factors,
@@ -266,6 +251,10 @@ class NLPBESolver:
         self.n_grad_map_points = self.num_grid_points * 3
         # Allocate and init with zero maps_3d and grad_maps_4d
         self.grid_charge_map_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
+        self.final_rms = None
+        self.final_dphi = None
+        self.total_iters = 0
+        self.convergence_status = None
 
     def _prepare_to_iterate(
         self,
@@ -282,7 +271,7 @@ class NLPBESolver:
         epsilon_map_1d: np.ndarray[delphi_real],
         epsmap_midpoints_1d: np.ndarray[delphi_real],
         charge_map_1d: np.ndarray[delphi_real],
-        eps_midpoint_neighs_sum_plus_salt_screening_1d: np.ndarray[delphi_real],
+        inverse_neighs_eps_sum_plus_salt_screening_1d: np.ndarray[delphi_real],
         boundary_gridpoints_1d: np.ndarray[delphi_bool],
     ):
         """
@@ -308,8 +297,8 @@ class NLPBESolver:
             epsilon_map_1d (np.ndarray[delphi_real]): 1D array of dielectric values the grid.
             epsmap_midpoints_1d (np.ndarray[delphi_real]): 1D array of dielectric values at grid midpoints.
             charge_map_1d (np.ndarray[delphi_real]): 1D array holding the charge distribution.
-            eps_midpoint_neighs_sum_plus_salt_screening_1d (np.ndarray[delphi_real]): 1D array to hold the sum of dielectric values
-                                                                from neighboring grid midpoints.
+            inverse_neighs_eps_sum_plus_salt_screening_1d (np.ndarray[delphi_real]): 1D array to hold the inverse of
+                                                                sum of dielectric values from neighboring grid and salt screening.
             boundary_gridpoints_1d (np.ndarray[delphi_bool]): 1D boolean array marking the boundary grid points.
 
         Returns:
@@ -319,7 +308,7 @@ class NLPBESolver:
         if debug_me:
             charge_map_1d_back = charge_map_1d.copy()
             eps_midpoint_neighs_sum_plus_salt_screening_1d_back = (
-                eps_midpoint_neighs_sum_plus_salt_screening_1d.copy()
+                inverse_neighs_eps_sum_plus_salt_screening_1d.copy()
             )
             boundary_gridpoints_1d_back = boundary_gridpoints_1d.copy()
         # Platform-specific setup
@@ -337,8 +326,29 @@ class NLPBESolver:
                 grid_shape,
                 epsmap_midpoints_1d,
                 charge_map_1d,
-                eps_midpoint_neighs_sum_plus_salt_screening_1d,
+                inverse_neighs_eps_sum_plus_salt_screening_1d,
                 boundary_gridpoints_1d,
+            )
+
+            # Encode the ION_EXCLUSION Binary state in boundary_gridpoints_1d
+            _cpu_mark_ion_accessible_in_boundary_flags_1d(
+                ion_exclusion_map_1d,
+                boundary_gridpoints_1d,
+            )
+
+            _cpu_apply_salt_and_invert_denominator_inplace(
+                vacuum=vacuum,
+                non_zero_salt=non_zero_salt,
+                is_gaussian=is_gaussian_diel_model,
+                exdi=exdi,
+                ion_radius=2.0,
+                ions_valance=1.0,
+                debye_length=debye_length,
+                epkt=epkt,
+                grid_spacing=grid_spacing,
+                epsilon_map_1d=epsilon_map_1d,
+                ion_exclusion_map_1d=ion_exclusion_map_1d,
+                denom_1d=inverse_neighs_eps_sum_plus_salt_screening_1d,
             )
 
         elif self.platform.active == "cuda":
@@ -352,13 +362,14 @@ class NLPBESolver:
             epsmap_midpoints_1d_device = cuda.to_device(epsmap_midpoints_1d)
             charge_map_1d_device = cuda.to_device(charge_map_1d)
             eps_midpoint_neighs_sum_plus_salt_screening_1d_device = cuda.to_device(
-                eps_midpoint_neighs_sum_plus_salt_screening_1d
+                inverse_neighs_eps_sum_plus_salt_screening_1d
             )
+            ion_exclusion_map_1d_device = cuda.to_device(ion_exclusion_map_1d)
             boundary_gridpoints_1d_device = cuda.to_device(boundary_gridpoints_1d)
 
             # Launch the CUDA kernel with appropriate grid and block configuration
             _cuda_prepare_charge_neigh_eps_sum_to_iterate[
-                n_blocks, self.num_cuda_threads
+                int(n_blocks), int(self.num_cuda_threads)
             ](
                 vacuum,
                 exdi,
@@ -372,10 +383,51 @@ class NLPBESolver:
                 boundary_gridpoints_1d_device,
             )
 
+            # Encode the ION_EXCLUSION Binary state in boundary_gridpoints_1d
+            _cuda_mark_ion_accessible_in_boundary_flags_1d[
+                int(n_blocks), int(self.num_cuda_threads)
+            ](
+                ion_exclusion_map_1d_device,
+                boundary_gridpoints_1d_device,
+                np.uint8(BOX_BOUNDARY),
+                np.uint8(BOX_ION_ACCESSIBLE),
+            )
+
+            epsout = delphi_real(exdi)  # vacuum already excluded above
+            inv_epsout = 1.0 / epsout
+
+            h2 = grid_spacing * grid_spacing
+            kappa2 = exdi / (debye_length * debye_length)
+            kappa_h2 = kappa2 * h2
+
+            ion_radius = 2.0
+            ions_valance = 1.0
+            # only used in gaussian branch
+            penalty_factor = epkt * ((ions_valance * ions_valance) / (2.0 * ion_radius))
+
+            if vacuum or (not non_zero_salt):
+                _cuda_invert_denominator_inplace[
+                    int(n_blocks), int(self.num_cuda_threads)
+                ](eps_midpoint_neighs_sum_plus_salt_screening_1d_device)
+            else:
+                epsilon_map_1d_device = cuda.to_device(epsilon_map_1d)
+                _cuda_apply_salt_and_invert_denominator_inplace[
+                    int(n_blocks), int(self.num_cuda_threads)
+                ](
+                    is_gaussian_diel_model,
+                    inv_epsout,
+                    kappa_h2,
+                    penalty_factor,
+                    epsilon_map_1d_device,
+                    ion_exclusion_map_1d_device,
+                    eps_midpoint_neighs_sum_plus_salt_screening_1d_device,
+                )
+                epsilon_map_1d_device = None
+
             # Transfer the computed results back from GPU to host memory
             charge_map_1d_device.copy_to_host(charge_map_1d)
             eps_midpoint_neighs_sum_plus_salt_screening_1d_device.copy_to_host(
-                eps_midpoint_neighs_sum_plus_salt_screening_1d
+                inverse_neighs_eps_sum_plus_salt_screening_1d
             )
             boundary_gridpoints_1d_device.copy_to_host(boundary_gridpoints_1d)
 
@@ -386,58 +438,7 @@ class NLPBESolver:
             charge_map_1d_device = None
             eps_midpoint_neighs_sum_plus_salt_screening_1d_device = None
             boundary_gridpoints_1d_device = None
-
-        # Encode the ION_EXCLUSION Binary state in boundary_gridpoints_1d
-        _cpu_mark_ion_accessible_in_boundary_flags_1d(
-            ion_exclusion_map_1d,
-            boundary_gridpoints_1d,
-        )
-        num_grid_points = grid_shape[0] * grid_shape[1] * grid_shape[2]
-        salt_ions_solvation_penalty_map_1d = np.zeros(
-            num_grid_points, dtype=delphi_real
-        )
-
-        if (not vacuum) and non_zero_salt:
-            grid_spacing_square = grid_spacing**2
-            kappa_square = exdi / debye_length**2  # Related to ionic screening
-
-            kappa_x_grid_spacing_wholesquare = (
-                kappa_square * grid_spacing_square
-            )  # Screening term
-            # Compute salt ions solvation penalty/screening factor
-            _cpu_salt_ions_solvation_penalty(
-                vacuum=vacuum,
-                non_zero_salt=non_zero_salt,
-                is_gaussian_diel_model=is_gaussian_diel_model,
-                exdi=exdi,
-                ion_radius=2.0,
-                ions_valance=1.0,
-                debye_length=debye_length,
-                epkt=epkt,
-                grid_spacing=grid_spacing,
-                grid_shape=grid_shape,
-                epsilon_map_1d=epsilon_map_1d,
-                ion_exclusion_map_1d=ion_exclusion_map_1d,
-                salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
-            )
-            if debug_me:
-                np.save(
-                    f"epsilon_map_1d_gaussian-{is_gaussian_diel_model}.npy",
-                    epsilon_map_1d,
-                )
-                np.save(
-                    f"salt_ions_solvation_penalty_map_1d_gaussian-{is_gaussian_diel_model}.npy",
-                    salt_ions_solvation_penalty_map_1d,
-                )
-
-            # Add salt ions solvation penalty to the neighbor midpoints dielectric sum to prepare denominator of iter formula
-            _add_salt_penalty_to_neigh_eps_sum(
-                vacuum=vacuum,
-                kappa_x_grid_spacing_wholesquare=kappa_x_grid_spacing_wholesquare,
-                salt_ions_solvation_penalty_map_1d=salt_ions_solvation_penalty_map_1d,
-                eps_midpoint_neighs_sum_plus_salt_screening_1d=eps_midpoint_neighs_sum_plus_salt_screening_1d,
-                effective_ions_exclusion_map_1d=ion_exclusion_map_1d,
-            )
+            ion_exclusion_map_1d_device = None
 
     def _calc_relaxation_factor(
         self,
@@ -508,7 +509,7 @@ class NLPBESolver:
             ) // self.num_cuda_threads
 
             # Initialize phimap values on GPU
-            _cuda_init_relaxfactor_phimap[num_blocks, self.num_cuda_threads](
+            _cuda_init_relaxfactor_phimap[int(num_blocks), int(self.num_cuda_threads)](
                 grid_shape_device,
                 sn1_device,
                 sn2_device,
@@ -571,7 +572,7 @@ class NLPBESolver:
                 ):  # Runs for 1 to itr_block_size - 1
                     for even_odd in [0, 1]:
                         _cuda_iterate_relaxation_factor[
-                            num_blocks, self.num_cuda_threads
+                            int(num_blocks), int(self.num_cuda_threads)
                         ](
                             even_odd,
                             grid_shape_device,
@@ -600,7 +601,9 @@ class NLPBESolver:
 
                 # Perform the final (itr_block_size)th iteration
             for even_odd in [0, 1]:
-                _cuda_iterate_relaxation_factor[num_blocks, self.num_cuda_threads](
+                _cuda_iterate_relaxation_factor[
+                    int(num_blocks), int(self.num_cuda_threads)
+                ](
                     even_odd,
                     grid_shape_device,
                     (phimap_odds_1d_device if even_odd == 0 else phimap_even_1d_device),
@@ -709,13 +712,14 @@ class NLPBESolver:
                 else max_nonlinear_iters
             )
             if nonlinear_iter == 0:
-                if coupling_steps > 0:
+                if coupling_steps > 0 and max_nonlinear_iters > 0:
                     vprint(
                         INFO,
                         _VERBOSITY,
                         f"\n    PBE> Nonlinear running initial linear step",
                     )
-                else:
+
+                if max_nonlinear_iters == 0:
                     vprint(
                         INFO,
                         _VERBOSITY,
@@ -740,7 +744,9 @@ class NLPBESolver:
 
                 if non_zero_salt:
                     nonlin_coupling_factor = current_chi * kappa_x_h2
-                    _cuda_update_effective_charge_map_1d[n_blocks, num_cuda_threads](
+                    _cuda_update_effective_charge_map_1d[
+                        int(n_blocks), int(num_cuda_threads)
+                    ](
                         nonlin_coupling_factor,
                         grid_shape[0],
                         grid_shape[1],
@@ -752,7 +758,7 @@ class NLPBESolver:
                     )
 
             # --- Linear subsolve (CUDA SOR) ---
-            rmsd, max_change, num_iter = self._cuda_solve_linear_pb_sor(
+            rmsd, max_change, num_iter, convrg_status = self._cuda_solve_linear_pb_sor(
                 num_cuda_threads,
                 phi_even_half_1d_device,
                 phi_odd_half_1d_device,
@@ -770,6 +776,11 @@ class NLPBESolver:
                 effective_itr_block,
                 verbose=True,
             )
+
+            self.final_rms = rmsd
+            self.final_dphi = max_change
+            self.total_iters += num_iter
+            self.convergence_status = convrg_status
 
             if (
                 max_change < nonlinear_coupling_max_dphi
@@ -822,6 +833,11 @@ class NLPBESolver:
         phimap_current_1d,
     ):
         effective_omega_sor = omega_sor
+
+        solver_kind = "Linear"
+        if max_nonlinear_iters > 0:
+            solver_kind = "Nonlinear"
+
         # --- 5. Nonlinear coupling loop ---
         for nonlinear_iter in range(coupling_steps + 1):
             effective_enforce_dphi = (
@@ -845,12 +861,21 @@ class NLPBESolver:
                 if nonlinear_iter in (0, coupling_steps)
                 else max_nonlinear_iters
             )
+
             if nonlinear_iter == 0:
-                vprint(
-                    INFO,
-                    _VERBOSITY,
-                    f"\n    PBE> Nonlinear running initial linear step",
-                )
+                if coupling_steps > 0 and max_nonlinear_iters > 0:
+                    vprint(
+                        INFO,
+                        _VERBOSITY,
+                        f"\n    PBE> Nonlinear running initial linear step",
+                    )
+
+                if max_nonlinear_iters == 0:
+                    vprint(
+                        INFO,
+                        _VERBOSITY,
+                        f"\n    PBE> Running SOR solver for linear PB",
+                    )
 
             if nonlinear_iter > 0:
                 effective_omega_sor = omega_sor
@@ -882,7 +907,7 @@ class NLPBESolver:
                     # )
 
             # --- Linear subsolve (on half arrays) ---
-            rmsd, max_change, num_iter = self._cpu_solve_linear_pb_sor(
+            rmsd, max_change, num_iter, conrvg_status = self._cpu_solve_linear_pb_sor(
                 num_cpu_threads,
                 phi_even_half_1d,
                 phi_odd_half_1d,
@@ -901,6 +926,10 @@ class NLPBESolver:
                 verbose=True,
             )
 
+            self.final_rms = rmsd
+            self.final_dphi = max_change
+            self.total_iters += num_iter
+            self.convergence_status = conrvg_status
             # np.save(
             #     f"phi_even_half_1d_v2_after{nonlinear_iter}.npy",
             #     phi_even_half_1d,
@@ -919,7 +948,7 @@ class NLPBESolver:
                 max_change < nonlinear_coupling_max_dphi
                 and abs(current_chi - 1.0) < approx_zero
             ):
-                vprint(INFO, _VERBOSITY, "    PBE> Nonlinear solver converged.")
+                vprint(INFO, _VERBOSITY, f"    PBE> {solver_kind} solver converged.")
                 break
 
         # --- 6. Copy half → full once at the end ---
@@ -1008,7 +1037,7 @@ class NLPBESolver:
                         )
 
                         _cuda_iterate_SOR_odd_with_dphi_rmsd[
-                            n_blocks, num_cuda_threads
+                            int(n_blocks), int(num_cuda_threads)
                         ](
                             even_odd,
                             omega_sor,
@@ -1030,7 +1059,7 @@ class NLPBESolver:
                         max_delta_phi_device.copy_to_host(max_delta_phi_host)
 
                     else:
-                        _cuda_iterate_SOR[n_blocks, num_cuda_threads](
+                        _cuda_iterate_SOR[int(n_blocks), int(num_cuda_threads)](
                             even_odd,
                             omega_sor,
                             approx_zero,
@@ -1073,6 +1102,12 @@ class NLPBESolver:
                 disable_stagnation_check=False,
             )
 
+            status_label = (
+                "UNKNOWN",
+                "CONVERGED_THRESH",
+                "CONVERGED_STAG",
+                "DIVERGED",
+            )
             if stop:
                 if status == 1:
                     vprint(
@@ -1094,7 +1129,7 @@ class NLPBESolver:
                     )
                 break
 
-        return rmsd, max_delta_phi, total_iter
+        return rmsd, max_delta_phi, total_iter, status_label[status]
 
     def _cpu_solve_linear_pb_sor(
         self,
@@ -1223,6 +1258,12 @@ class NLPBESolver:
                 disable_stagnation_check=False,
             )
 
+            status_label = (
+                "UNKNOWN",
+                "CONVERGED_THRESH",
+                "CONVERGED_STAG",
+                "DIVERGED",
+            )
             if stop:
                 if status == 1:
                     vprint(
@@ -1245,7 +1286,7 @@ class NLPBESolver:
                 break
 
         # --- Finalization ---
-        return rmsd, global_max_change, num_iter
+        return rmsd, global_max_change, num_iter, status_label[status]
 
     def solve_nonlinear_pb(
         self,
@@ -1292,6 +1333,7 @@ class NLPBESolver:
         Copies data to half-arrays once at start and back once at the end.
         Uses _solve_linear_pb_sor_cpu_v2 for all linear sub-solves.
         """
+        tic_preinit = time.perf_counter()
         # --- 1. Setup constants ---
         grid_spacing = 1.0 / scale
         grid_spacing_sq = grid_spacing * grid_spacing
@@ -1300,10 +1342,24 @@ class NLPBESolver:
         is_gaussian = dielectric_model.int_value == DielectricModel.GAUSSIAN.int_value
 
         num_cpu_threads = self.platform.names["cpu"]["num_threads"]
+        toc_preinit = time.perf_counter()
+        msg = (
+            "solver>> pre initialization: "
+            + "{:0.3f}".format(toc_preinit - tic_preinit)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         # --- 2. Charge map and boundary setup ---
         charge_map_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
         _set_gridpoint_charges(grid_shape, charged_gridpoints_1d, charge_map_1d)
+        toc_setcrg = time.perf_counter()
+        msg = (
+            "solver>> charge map consition setup: "
+            + "{:0.3f}".format(toc_setcrg - toc_preinit)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         phimap_current_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
         self._setup_boundary_condition(
@@ -1328,9 +1384,16 @@ class NLPBESolver:
             phimap_1d=phimap_current_1d,
             phimap_parentrun=phimap_parentrun,
         )
+        toc_setbc = time.perf_counter()
+        msg = (
+            "solver>> boundary consition setup: "
+            + "{:0.3f}".format(toc_setbc - toc_setcrg)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         # --- 3. Linear operator setup ---
-        eps_mid_sum_plus_salt_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
+        inv_eps_mid_sum_plus_salt_1d = np.zeros(self.num_grid_points, dtype=delphi_real)
         # boundary_flags_1d = np.zeros(self.num_grid_points, dtype=delphi_bool)
         boundary_flags_1d = np.full(self.num_grid_points, BOX_NONE, dtype=np.uint8)
 
@@ -1348,19 +1411,32 @@ class NLPBESolver:
             epsilon_map_1d,
             epsmap_midpoints_1d,
             charge_map_1d,
-            eps_mid_sum_plus_salt_1d,
+            inv_eps_mid_sum_plus_salt_1d,
             boundary_flags_1d,
         )
+        toc_prepitr = time.perf_counter()
+        msg = (
+            "solver>> iteration preparation: "
+            + "{:0.3f}".format(toc_prepitr - toc_setbc)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         spectral_radius, omega_sor = self._calc_relaxation_factor(
             1,
             grid_shape,
             np.zeros(3, dtype=delphi_bool),
             epsmap_midpoints_1d,
-            eps_mid_sum_plus_salt_1d,
+            inv_eps_mid_sum_plus_salt_1d,
             boundary_flags_1d,
         )
-
+        toc_omegacalc = time.perf_counter()
+        msg = (
+            "solver>> omega calculation: "
+            + "{:0.3f}".format(toc_omegacalc - toc_prepitr)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
         vprint(
             INFO,
             _VERBOSITY,
@@ -1378,6 +1454,13 @@ class NLPBESolver:
         # Copy full → half safely via helper  once at the start
         _copy_to_sample(phi_even_half_1d, phimap_current_1d, offset=0, skip=2)
         _copy_to_sample(phi_odd_half_1d, phimap_current_1d, offset=1, skip=2)
+        toc_setbuff = time.perf_counter()
+        msg = (
+            "solver>> buffer-array setup: "
+            + "{:0.3f}".format(toc_setbuff - toc_omegacalc)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         # np.save(
         #     f"boundary_flags_1d_v2.npy",
@@ -1407,7 +1490,7 @@ class NLPBESolver:
                 approx_zero,
                 grid_shape,
                 epsmap_midpoints_1d,
-                eps_mid_sum_plus_salt_1d,
+                inv_eps_mid_sum_plus_salt_1d,
                 boundary_flags_1d,
                 effective_charge_map_1d,
                 phi_even_half_1d,
@@ -1433,7 +1516,7 @@ class NLPBESolver:
                 approx_zero,
                 grid_shape,
                 epsmap_midpoints_1d,
-                eps_mid_sum_plus_salt_1d,
+                inv_eps_mid_sum_plus_salt_1d,
                 boundary_flags_1d,
                 effective_charge_map_1d,
                 phi_even_half_1d,
@@ -1442,6 +1525,13 @@ class NLPBESolver:
             )
         else:
             vprint(ERROR, _VERBOSITY, f"Unknown platform: {self.platform.active}")
+        toc_iters = time.perf_counter()
+        msg = (
+            "solver>> performing iterations: "
+            + "{:0.3f}".format(toc_iters - toc_setbuff)
+            + " s"
+        )
+        vprint(VERBOSE, _VERBOSITY, msg)
 
         return phimap_current_1d
 
@@ -1526,7 +1616,7 @@ class NLPBESolver:
                 phimap_1d_device = cuda.to_device(phimap_1d)
                 # CALL: CUDA kernel for the computation
                 _cuda_setup_coulombic_boundary_condition[
-                    n_blocks, self.num_cuda_threads
+                    int(n_blocks), int(self.num_cuda_threads)
                 ](
                     vacuum,
                     grid_spacing,
@@ -1587,6 +1677,7 @@ class NLPBESolver:
                     n_blocks = (
                         self.num_grid_points + self.num_cuda_threads - 1
                     ) // self.num_cuda_threads
+
                     grid_shape_device = cuda.to_device(grid_shape)
                     grid_centroid_pve_charge_device = cuda.to_device(
                         grid_centroid_pve_charge
@@ -1597,7 +1688,7 @@ class NLPBESolver:
                     phimap_1d_device = cuda.to_device(phimap_1d)
                     # CALL: CUDA kernel for the computation
                     _cuda_setup_dipolar_boundary_condition[
-                        n_blocks, self.num_cuda_threads
+                        int(n_blocks), int(self.num_cuda_threads)
                     ](
                         delphi_bool(vacuum),
                         delphi_bool(has_pve_charges),

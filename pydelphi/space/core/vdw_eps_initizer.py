@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
+#
+# PyDelphi is free software: you can redistribute it and/or modify
+# (at your option) any later version.
+#
+# PyDelphi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#
+
 
 """
 This module provides functions for calculating discrete dielectric maps and zeta surface maps
@@ -313,7 +322,7 @@ def _cpu_calc_vdw_discrete_epsilon_map(
                             break
 
 
-@cuda.jit(cache=True)
+@cuda.jit
 def _cuda_calc_vdw_discrete_epsilon_map(
     epsilon_dimension,
     scale,
@@ -570,7 +579,9 @@ def calculate_vdw_discrete_epsilon_map(
         ) // threads_per_block
 
         # Launch CUDA kernel
-        _cuda_calc_vdw_discrete_epsilon_map[blocks_per_grid, threads_per_block](
+        _cuda_calc_vdw_discrete_epsilon_map[
+            int(blocks_per_grid), int(threads_per_block)
+        ](
             delphi_real(epsilon_dimension),
             delphi_real(scale),
             delphi_real(salt_radius),
@@ -693,18 +704,17 @@ def _cpu_calc_vdw_zeta_surf_map(
                         atom_idx = voxel_zeta_atom_ids[atom_list_idx] - 1
                         this_atom = atoms_data[atom_idx]
 
-                        if size_cpu.is_atom_res_protein(this_atom.astype(delphi_real)):
-                            dx = grid_x - this_atom[ATOMFIELD_X]
-                            dy = grid_y - this_atom[ATOMFIELD_Y]
-                            dz = grid_z - this_atom[ATOMFIELD_Z]
-                            dist_square = dx * dx + dy * dy + dz * dz
-                            radius_effective = (
-                                this_atom[ATOMFIELD_RADIUS] + zeta_distance
-                            )
+                        ## if size_cpu.is_atom_res_protein(this_atom.astype(delphi_real)):
+                        # We dont filter grid-points around only protein-atoms anymore: 2026-07-09
+                        dx = grid_x - this_atom[ATOMFIELD_X]
+                        dy = grid_y - this_atom[ATOMFIELD_Y]
+                        dz = grid_z - this_atom[ATOMFIELD_Z]
+                        dist_square = dx * dx + dy * dy + dz * dz
+                        radius_effective = this_atom[ATOMFIELD_RADIUS] + zeta_distance
 
-                            if dist_square < radius_effective * radius_effective:
-                                zeta_surface_map_1d[ijk1d] = False
-                                break  # Found one atom that excludes this grid point
+                        if dist_square < radius_effective * radius_effective:
+                            zeta_surface_map_1d[ijk1d] = False
+                            break  # Found one atom that excludes this grid point
 
                 if not zeta_surface_map_1d[ijk1d]:
                     break
@@ -721,7 +731,7 @@ def get_neighbor_offset(offset_idx):
     )
 
 
-@cuda.jit(cache=True)
+@cuda.jit
 def _cuda_calc_vdw_zeta_surf_map(
     scale,
     zeta_distance,
@@ -784,23 +794,25 @@ def _cuda_calc_vdw_zeta_surf_map(
     grid_pos_y = iy / scale + grid_origin[1]
     grid_pos_z = iz / scale + grid_origin[2]
 
-    vzx = int((grid_pos_x - voxel_zeta_map_origin[0]) * voxel_zeta_map_scale)
-    vzy = int((grid_pos_y - voxel_zeta_map_origin[1]) * voxel_zeta_map_scale)
-    vzz = int((grid_pos_z - voxel_zeta_map_origin[2]) * voxel_zeta_map_scale)
-
-    if vzx < 0 or vzx >= voxel_zeta_map_shape[0]:
-        return
-    if vzy < 0 or vzy >= voxel_zeta_map_shape[1]:
-        return
-    if vzz < 0 or vzz >= voxel_zeta_map_shape[2]:
-        return
+    # Match CPU behavior:
+    # vz = min(max(0, int(...)), voxel_zeta_map_shape[d])
+    # CPU treats voxel_zeta_map_shape[d] as an inclusive upper index.
+    vzx = min(
+        max(0, int((grid_pos_x - voxel_zeta_map_origin[0]) * voxel_zeta_map_scale)),
+        voxel_zeta_map_shape[0],
+    )
+    vzy = min(
+        max(0, int((grid_pos_y - voxel_zeta_map_origin[1]) * voxel_zeta_map_scale)),
+        voxel_zeta_map_shape[1],
+    )
+    vzz = min(
+        max(0, int((grid_pos_z - voxel_zeta_map_origin[2]) * voxel_zeta_map_scale)),
+        voxel_zeta_map_shape[2],
+    )
 
     if not zeta_surface_map_1d[i]:
         return
 
-    zeta_surface_map_1d[i] = (
-        True  # Initialize values to default expected value True: defensive programming
-    )
     for offset_idx in range(27):
         dvx, dvy, dvz = get_neighbor_offset(offset_idx)
         nx = vzx + dvx
@@ -808,9 +820,9 @@ def _cuda_calc_vdw_zeta_surf_map(
         nz = vzz + dvz
 
         if (
-            0 <= nx < voxel_zeta_map_shape[0]
-            and 0 <= ny < voxel_zeta_map_shape[1]
-            and 0 <= nz < voxel_zeta_map_shape[2]
+            0 <= nx <= voxel_zeta_map_shape[0]
+            and 0 <= ny <= voxel_zeta_map_shape[1]
+            and 0 <= nz <= voxel_zeta_map_shape[2]
         ):
             start_voxel_id = voxel_zeta_atom_start_index[nx, ny, nz]
             end_voxel_id = voxel_zeta_atom_end_index[nx, ny, nz]
@@ -825,13 +837,14 @@ def _cuda_calc_vdw_zeta_surf_map(
                     dz = grid_pos_z - this_atom[ATOMFIELD_Z]
                     dist_square = dx * dx + dy * dy + dz * dz
 
-                    if size_gpu.cu_is_atom_res_protein(this_atom):
-                        radius_effective_square = (
-                            this_atom[ATOMFIELD_RADIUS] + zeta_distance
-                        ) ** 2
-                        if dist_square < radius_effective_square:
-                            zeta_surface_map_1d[i] = False
-                            return
+                    ## if size_gpu.cu_is_atom_res_protein(this_atom):
+                    # We dont filter grid-points around only protein-atoms anymore: 2026-07-09
+                    radius_effective_square = (
+                        this_atom[ATOMFIELD_RADIUS] + zeta_distance
+                    ) ** 2
+                    if dist_square < radius_effective_square:
+                        zeta_surface_map_1d[i] = False
+                        return
 
 
 def calculate_vdw_zeta_surf_map(
@@ -890,7 +903,7 @@ def calculate_vdw_zeta_surf_map(
         ) // threads_per_block
 
         # Launch CUDA kernel
-        _cuda_calc_vdw_zeta_surf_map[blocks_per_grid, threads_per_block](
+        _cuda_calc_vdw_zeta_surf_map[int(blocks_per_grid), int(threads_per_block)](
             delphi_real(scale),
             delphi_real(zeta_distance),
             grid_shape_dev,

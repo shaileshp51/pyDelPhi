@@ -36,6 +36,8 @@ The module also includes Numba-jitted helper functions (`_njit_prepare_focusing_
 
 import math
 import numpy as np
+from os import path
+from typing import Callable
 from numba import njit
 
 from pydelphi.foundation.enums import (
@@ -44,6 +46,7 @@ from pydelphi.foundation.enums import (
     GridboxSize,
     GridBoxType,
 )
+from pydelphi.foundation.models import AtomAdjacencyCSR
 from pydelphi.energy.energy_models import EnergyResults
 from pydelphi.constants import ConstPhysical as Constants
 from pydelphi.constants import ConstDelPhiFloats as ConstDelPhi
@@ -264,6 +267,134 @@ def _njit_atoms_summary_loop(
     )
 
 
+def get_gridbox_center_override(
+    acenter=None,
+    in_frc=None,
+    scale: float | None = None,
+    atoms_keys: list[tuple] | None = None,
+    atoms_dict=None,
+    selections_idx: dict[str, np.ndarray] | None = None,
+    # injected callables (avoid imports / self)
+    acenter_center_from_file: Callable[[str, float], np.ndarray] | None = None,
+    frc_center_from_file: Callable[[str, float], np.ndarray] | None = None,
+) -> np.ndarray:
+    """
+    Compute the gridbox center override (no grid_offset applied here).
+
+    Priority:
+      1) If `acenter` is supplied: use its exclusive mode:
+           - xyz: (x,y,z)
+           - selection: sel/selection_name -> selection_center(atoms_data, indices)
+           - file: file/infile -> acenter_center_from_file(filepath, scale)
+      2) Else if `in_frc` is supplied: use legacy FRC center:
+           frc_center_from_file(frc_file, gridbox_offset, scale)
+         NOTE: offset application is controlled by the passed function; this helper
+         does not apply grid_offset itself.
+      3) Else: return zeros(3).
+
+    Returns
+    -------
+    np.ndarray
+        (3,) float64 center vector.
+    """
+    # -------------------------
+    # 1) acenter takes priority
+    # -------------------------
+    if acenter is not None and getattr(acenter, "issupplied", False):
+        x = acenter.get_attribute("x")
+        y = acenter.get_attribute("y")
+        z = acenter.get_attribute("z")
+
+        sel_name = (acenter.get_attribute("selection_name") or "").strip()
+        infile = (acenter.get_attribute("infile") or "").strip()
+
+        has_any_xyz = (x is not None) or (y is not None) or (z is not None)
+        has_sel = sel_name != ""
+        has_file = infile != ""
+
+        # defensive (ideally enforced by _validate_acenter already)
+        if (int(has_any_xyz) + int(has_sel) + int(has_file)) != 1:
+            raise ValueError(
+                "acenter: specify exactly one of: (x,y,z) OR sel/selection_name OR file/infile."
+            )
+
+        # xyz mode
+        if has_any_xyz:
+            if x is None or y is None or z is None:
+                raise ValueError("acenter: x, y, z must all be provided together.")
+            return np.array([float(x), float(y), float(z)], dtype=np.float64)
+
+        # selection mode
+        if has_sel:
+            if selections_idx is None:
+                raise ValueError("acenter selection mode requires selections_idx.")
+            if sel_name not in selections_idx:
+                raise ValueError(
+                    f"acenter(sel='{sel_name}'): unknown selection name. "
+                    "Define it first using select(name=..., ...)."
+                )
+            idx_array = selections_idx[sel_name]
+            if idx_array is None or len(idx_array) == 0:
+                raise ValueError(f"acenter(sel='{sel_name}'): selection is empty.")
+            num_sel_atoms = len(idx_array)
+            sum_positions = np.zeros(3, np.float64)
+            for idx in idx_array:
+                atom_k = atoms_keys[idx]
+                sum_positions[0] += atoms_dict[atom_k][ATOMFIELD_X]
+                sum_positions[1] += atoms_dict[atom_k][ATOMFIELD_Y]
+                sum_positions[2] += atoms_dict[atom_k][ATOMFIELD_Z]
+            c = sum_positions / num_sel_atoms
+            if c.shape != (3,):
+                raise ValueError("selection_center must return a 3-element vector.")
+            return c
+
+        # file mode
+        if has_file:
+            if acenter_center_from_file is None:
+                raise ValueError(
+                    "acenter file mode requires acenter_center_from_file(filepath, scale) callback."
+                )
+            if not path.isfile(infile):
+                raise FileNotFoundError(f"acenter file not found: '{infile}'")
+            if scale is None:
+                raise ValueError("scale must be provided when using acenter file mode.")
+            c = np.asarray(
+                acenter_center_from_file(infile, float(scale)), dtype=np.float64
+            )
+            if c.shape != (3,):
+                raise ValueError(
+                    "acenter_center_from_file must return a 3-element vector."
+                )
+            return c
+
+        # unreachable, but keep safe:
+        return np.zeros(3, dtype=np.float64)
+
+    # -------------------------
+    # 2) legacy FRC fallback
+    # -------------------------
+    if in_frc is not None and getattr(in_frc, "issupplied", False):
+        if frc_center_from_file is None:
+            raise ValueError(
+                "frc_center_from_file(frc_file, gridbox_offset, scale) callback must be provided "
+                "when using legacy FRC center."
+            )
+        frc_file = in_frc.get_attribute("file")
+        if not path.isfile(frc_file):
+            raise FileNotFoundError(f"FRC file not found: '{frc_file}'")
+        if scale is None:
+            raise ValueError("scale must be provided when using FRC-based center.")
+
+        return np.asarray(
+            frc_center_from_file(frc_file, float(scale)), dtype=np.float64
+        )
+
+    # -------------------------
+    # 3) nothing supplied
+    # -------------------------
+    return np.zeros(3, dtype=np.float64)
+
+
 class RuntimeContext:
     """
     A container class to hold and manage runtime-context/state for pyDelphi calculations.
@@ -278,6 +409,11 @@ class RuntimeContext:
         external_dielectric_scaled (delphi_real): Scaled external dielectric constant.
         gap_dielectric_scaled (delphi_real): Scaled gap dielectric constant.
         internal_dielectric_scaled (delphi_real): Scaled internal dielectric constant.
+        probe_radius (delphi_real): Solvent probe radius.
+        radius_offset (delphi_real): Offset to vdw radii of atoms used in nonpolat volue/surf.
+        pressure_coeff (delphi_real): Pressure-like coefficient p in the nonpolar term G_np = γA + pV.
+
+        ion_conc (delphi_real): Concentration of ions (salt).
         debye_length (delphi_real): Debye length of the ionic solution.
         debye_factor (delphi_real): Debye factor constant.
         _gridbox_size (GridboxSize): Dimensions of the grid box (nx, ny, nz).
@@ -373,6 +509,9 @@ class RuntimeContext:
         exdi,
         gapdi,
         indi,
+        probe_radius,
+        radius_offset,
+        pressure_coeff,
         precision: Precision,
         dtype_int,
         dtype_real,
@@ -398,6 +537,10 @@ class RuntimeContext:
         self.external_dielectric_scaled = exdi / self.epkt
         self.gap_dielectric_scaled = gapdi / self.epkt
         self.internal_dielectric_scaled = indi / self.epkt
+        # Nonpolar solvation related parameters
+        self.probe_radius = probe_radius
+        self.radius_offset = radius_offset
+        self.pressure_coeff = pressure_coeff
 
         # Salt dependent parameters
         self.ion_conc = None  # Concentration of Ions
@@ -413,8 +556,9 @@ class RuntimeContext:
         self.gridbox_margin = None
         self.grid_spacing = None
         self.grid_shape = np.zeros(3, dtype=self.delphi_int)
-        self.grid_origin = None
-        self.grid_center = None
+        self.grid_center = np.zeros(3, dtype=self.delphi_real)
+        self.grid_origin = np.zeros(3, dtype=self.delphi_real)
+        self.grid_offset = np.zeros(3, dtype=self.delphi_real)  # grid units
         self.geometric_center = None
         self.centroid = None
 
@@ -441,6 +585,10 @@ class RuntimeContext:
         self.atoms_index_to_keys = {}
         self.objects_data = None
 
+        # Atom selections
+        self.selections_sprec = None
+        self.selections_idx = None
+
         self.max_atom_radius = None
         self.num_atoms = 0
         self.objects_keys = {}
@@ -465,6 +613,7 @@ class RuntimeContext:
         self.media_epsilon = None
 
         # Space module related data - will be generated by Space module
+        self.adjacency_map = None  # build only when nonpolar energy is enabled
         self.gauss_density_map_1d = None
         self.gauss_density_map_midpoints_1d = None
         self.epsilon_map_1d = None
@@ -573,6 +722,8 @@ class RuntimeContext:
         self.atoms_data = None
         self.atoms_keys = {}
         self.atoms_index_to_keys = {}
+        self.selection_sprec = None
+        self.selection_idx = None
         self.max_atom_radius = None
         self.num_atoms = None
         self.extremas_rule = None
@@ -603,11 +754,12 @@ class RuntimeContext:
         This method is typically called when:
             - Changing the grid resolution (scale, gridbox size).
             - Switching between cubic and cuboidal grid types.
-            - Setting up a new grid configuration for adaptive refinement (if implemented).
         """
         # Reset fields set by setup_grid method.
         self.grid_shape = None
-        self.grid_origin = None
+        self.grid_center = np.zeros(3, dtype=self.delphi_real)
+        self.grid_origin = np.zeros(3, dtype=self.delphi_real)
+        self.grid_offset = np.zeros(3, dtype=self.delphi_real)  # grid units
         self.grid_spacing = None
         self.grid_shape = np.zeros(3, dtype=self.delphi_int)
         self._gridbox_size = None
@@ -706,7 +858,164 @@ class RuntimeContext:
             self.ion_conc = 0.0
         return self.debye_length
 
-    def atoms_summary(
+    def update_atom_coords_from_frame(self, frame_xyz: np.ndarray) -> None:
+        """
+        Update only the coordinate fields in self.atoms_data from a trajectory frame.
+
+        Args:
+            frame_xyz: (N, 3) array-like of coordinates (Å), ordered consistently with self.atoms_data rows.
+                       Accepts float32/float64; will be cast to self.delphi_real if needed.
+
+        Notes:
+            - Requires self.atoms_data to be initialized (e.g., via atoms_init_and_summary / load step).
+            - Does not recompute extrema/charges; call summarize_atoms_data(...) after this.
+        """
+        if self.atoms_data is None:
+            raise ValueError(
+                "ctx.atoms_data is not initialized. Call atoms_init_and_summary() first."
+            )
+
+        xyz = np.asarray(frame_xyz)
+        if xyz.ndim != 2 or xyz.shape[1] != 3:
+            raise ValueError(f"frame_xyz must have shape (N,3); got {xyz.shape!r}")
+
+        n = self.atoms_data.shape[0]
+        if xyz.shape[0] != n:
+            raise ValueError(
+                f"frame_xyz has {xyz.shape[0]} atoms, but ctx.atoms_data has {n} rows"
+            )
+
+        # Cast only if necessary (avoid copy when xyz dtype already matches)
+        # NOTE: np.asarray(xyz, dtype=...) will copy if dtype differs.
+        if xyz.dtype != self.delphi_real:
+            xyz = xyz.astype(self.delphi_real, copy=False)
+
+        # Write into the correct columns (do NOT assume 0:3)
+        self.atoms_data[:, ATOMFIELD_X] = xyz[:, 0]
+        self.atoms_data[:, ATOMFIELD_Y] = xyz[:, 1]
+        self.atoms_data[:, ATOMFIELD_Z] = xyz[:, 2]
+
+    def atoms_init(
+        self, atoms: dict, objects: any, is_focusing: delphi_bool = False
+    ) -> None:
+        self.extremas_rule = None
+
+        num_atoms = len(atoms)
+        atomfield_focusing = 1 if is_focusing else 0
+        atoms_data = np.zeros(
+            (num_atoms, LEN_ATOMFIELDS + atomfield_focusing),
+            dtype=self.delphi_real,
+        )
+
+        self.objects_data = objects
+        self.num_objects = len(objects)
+
+        atoms_keys = self.atoms_keys
+        atoms_index_to_keys = self.atoms_index_to_keys
+
+        max_atom_radius_val = 0.0
+
+        atom_index = 0
+        for a_key, a_data in atoms.items():
+            if not is_focusing:
+                atoms_keys[a_key] = atom_index
+                atoms_index_to_keys[atom_index] = a_key
+
+            atoms_data[atom_index, :] = a_data.astype(self.delphi_real, copy=False)
+
+            r = atoms_data[atom_index, ATOMFIELD_RADIUS]
+            if r > max_atom_radius_val:
+                max_atom_radius_val = r
+
+            atom_index += 1
+
+        self.atoms_data = atoms_data
+        self.num_atoms = num_atoms
+        self.max_atom_radius = max_atom_radius_val
+
+    def summarize_atoms_data(
+        self,
+        extremas_rule: SoluteExtremaRule,
+        acenter: np.ndarray,
+        enforce_acenter: delphi_bool,
+        max_atom_radius: delphi_real,
+    ) -> None:
+        if self.atoms_data is None:
+            raise ValueError("ctx.atoms_data not initialized; call atoms_init() first")
+
+        self.extremas_rule = extremas_rule
+
+        (
+            self.total_charge,
+            self.positive_charge,
+            self.negative_charge,
+            self.num_positive_charge,
+            self.num_negative_charge,
+            self.centroid_positive_charge,
+            self.centroid_negative_charge,
+            self.coords_by_axis_min,
+            self.coords_by_axis_max,
+            self.boundary_min,
+            self.boundary_max,
+            coords_sum,
+        ) = _njit_atoms_summary_loop(
+            self.atoms_data,
+            max_atom_radius,
+            extremas_rule.value,
+            acenter,
+            enforce_acenter,
+            self.delphi_real,
+        )
+
+        if self.positive_charge > 0:
+            self.centroid_positive_charge /= self.positive_charge
+        if abs(self.negative_charge) > 0:
+            self.centroid_negative_charge /= abs(self.negative_charge)
+
+        self.centroid = (self.boundary_max + self.boundary_min) / 2.0
+        self.geometric_center = coords_sum / self.num_atoms
+
+        if extremas_rule.value == SoluteExtremaRule.COORDINATE.value:
+            self.solute_range = self.coords_by_axis_max - self.coords_by_axis_min
+            self.grid_center = (
+                acenter.astype(self.delphi_real)
+                if enforce_acenter
+                else self.geometric_center
+            )
+        else:
+            self.solute_range = self.boundary_max - self.boundary_min
+            self.grid_center = (
+                acenter.astype(self.delphi_real) if enforce_acenter else self.centroid
+            )
+
+        self.solute_range_max = np.max(self.solute_range)
+
+        self.media_epsilon = np.array(
+            [
+                self.external_dielectric_scaled * self.epkt,
+                self.internal_dielectric_scaled * self.epkt,
+            ]
+        )
+
+    def atoms_init_and_summary(
+        self,
+        atoms: dict,
+        objects: any,
+        extremas_rule: SoluteExtremaRule,
+        acenter: np.ndarray,
+        enforce_acenter: delphi_bool,
+        is_focusing: delphi_bool = False,
+    ) -> None:
+        self.atoms_init(atoms, objects, is_focusing=is_focusing)
+
+        self.summarize_atoms_data(
+            extremas_rule,
+            acenter,
+            enforce_acenter,
+            self.max_atom_radius,
+        )
+
+    def atoms_init_and_summary_old(
         self,
         atoms: dict,
         objects: any,
@@ -952,41 +1261,30 @@ class RuntimeContext:
         gridbox_margin: delphi_real,
         gridbox_size: GridboxSize,
         gridbox_type: GridBoxType,
+        grid_offset: np.ndarray,  # (3,) in grid units
     ) -> tuple[delphi_real, delphi_real, np.ndarray[delphi_int]]:
-        """Calculates and sets grid parameters based on input or solute properties.
+        """
+        Calculates and sets grid parameters based on input or solute properties,
+        while accounting for grid_offset-induced asymmetry.
 
-        This method determines the grid scale, perfil (percentage fill), grid shape,
-        and grid margin based on the combination of input parameters provided.
-        It prioritizes `scale` and `gridbox_size` if both are given, otherwise, it
-        calculates the missing parameters based on available inputs and solute dimensions.
-        It also ensures that the grid box dimensions are odd numbers, incrementing by 1
-        if necessary to maintain grid centering.
-
-        Args:
-            scale (delphi_real): Desired grid scale (grid points per Angstrom).
-            perfil (delphi_real): Desired percentage fill of the solute in the grid box.
-            gridbox_margin (delphi_real): Desired margin around the solute in Angstroms.
-            gridbox_size (GridboxSize): Desired grid box dimensions (nx, ny, nz).
-                                            Use DelphiGridboxSize(0) or 0 to indicate auto-determination.
-            gridbox_type (GridBoxType): Type of grid box (CUBIC or CUBOIDAL).
+        Interpretation:
+          - grid_offset is specified in grid units and effectively translates the grid box.
+          - This translation makes the padding asymmetric; the tight-side padding is reduced by
+            abs(grid_offset[i]) * grid_spacing along each axis i.
+          - We *inflate* the box when sizing from requested margin/perfil so that the tight-side
+            (minimum) margin/perfil matches the user's request as closely as possible.
 
         Returns:
-            tuple[delphi_real, delphi_real, np.ndarray[delphi_int]]:
-                A tuple containing:
-                    - scale (delphi_real): The calculated or provided grid scale.
-                    - perfil (delphi_real): The calculated or provided percentage fill.
-                    - grid_shape (np.ndarray[delphi_int]): The determined grid shape (nx, ny, nz) as integer array.
-
-        Attributes updated:
-            scale (delphi_real): Stores the calculated or provided scale.
-            grid_spacing (delphi_real): Grid spacing (1/scale).
-            gridbox_size (DelphiGridboxSize): Stores the determined grid box size, ensuring odd dimensions.
-            perfil (delphi_real): Stores the calculated or provided perfil.
-            gridbox_margin (delphi_real): Stores the calculated or provided gridbox_margin.
-            grid_shape (np.ndarray[delphi_int]): Stores the determined grid shape.
+          (scale, perfil_effective, grid_shape)
         """
         warnings = []
-        # Ensure gridbox_size dimensions are odd by incrementing if even
+
+        # --- normalize/ensure array ---
+        go = np.asarray(grid_offset, dtype=np.float64)
+        if go.shape != (3,):
+            raise ValueError("grid_offset must be shape (3,) in grid units")
+
+        # --- Ensure gridbox_size dimensions are odd by incrementing if even ---
         if (not gridbox_size == 0) and gridbox_size.nx % 2 == 0:
             gridbox_size_new = GridboxSize(
                 gridbox_size.nx + 1, gridbox_size.ny, gridbox_size.nz
@@ -1027,111 +1325,220 @@ class RuntimeContext:
             )
             gridbox_size = gridbox_size_new
 
-        # Determine grid parameters based on input priority and availability
+        # Helper: oddify
+        def _make_odd(n: int) -> int:
+            return n + 1 if (n % 2 == 0) else n
+
+        # Helper: compute effective (tight-side) metrics for reporting, given final box sizes.
+        def _set_effective_metrics_from_box(gs_nx: int, gs_ny: int, gs_nz: int) -> None:
+            # grid_spacing must be set
+            h = float(self.grid_spacing)
+
+            # tight-side reduction in Å per axis
+            delta = np.abs(go) * h  # (3,) Å
+
+            if gridbox_type.value == GridBoxType.CUBOIDAL.value:
+                # Per-axis effective lengths and margins
+                Lx = float(gs_nx - 1) * h
+                Ly = float(gs_ny - 1) * h
+                Lz = float(gs_nz - 1) * h
+
+                Lx_eff = Lx - 2.0 * float(delta[0])
+                Ly_eff = Ly - 2.0 * float(delta[1])
+                Lz_eff = Lz - 2.0 * float(delta[2])
+
+                if Lx_eff <= 0 or Ly_eff <= 0 or Lz_eff <= 0:
+                    raise ValueError(
+                        "grid_offset too large for chosen grid size/scale (effective length <= 0)"
+                    )
+
+                # Tight-side margins (minimum of +/-) per axis
+                mx_min = (Lx - float(self.solute_range[0])) / 2.0 - float(delta[0])
+                my_min = (Ly - float(self.solute_range[1])) / 2.0 - float(delta[1])
+                mz_min = (Lz - float(self.solute_range[2])) / 2.0 - float(delta[2])
+
+                # For a single reported margin, take the worst axis
+                m_min = min(mx_min, my_min, mz_min)
+
+                # Effective perfil: worst-axis definition consistent with solute_range_max
+                # Use max dimension effective length to keep semantics close to your existing gs_max logic.
+                Leff_max = max(Lx_eff, Ly_eff, Lz_eff)
+                perfil_eff = float(self.solute_range_max) * 100.0 / Leff_max
+
+                self.gridbox_margin = float(m_min)
+                self.perfil = float(perfil_eff)
+            else:
+                # Cubic: use max dimension (they're equal), and worst offset magnitude
+                gs_max = max(gs_nx, gs_ny, gs_nz)
+                L = float(gs_max - 1) * h
+                delta_max = float(np.max(delta))
+                L_eff = L - 2.0 * delta_max
+                if L_eff <= 0:
+                    raise ValueError(
+                        "grid_offset too large for chosen grid size/scale (effective length <= 0)"
+                    )
+
+                m_min = (L - float(self.solute_range_max)) / 2.0 - delta_max
+                perfil_eff = float(self.solute_range_max) * 100.0 / L_eff
+
+                self.gridbox_margin = float(m_min)
+                self.perfil = float(perfil_eff)
+
+        # -------------------------
+        # Determine grid parameters
+        # -------------------------
+
         if scale > 0 and gridbox_size != 0:
+            # scale and gridbox_size provided -> compute effective perfil/margin for reporting
             self.scale = scale
             self.grid_spacing = 1.0 / self.scale
             self._gridbox_size = gridbox_size
-            gs_max = self._gridbox_size.nx  # Start with nx, then compare with ny, nz
-            gs_max = self._gridbox_size.ny if self._gridbox_size.ny > gs_max else gs_max
-            gs_max = self._gridbox_size.nz if self._gridbox_size.nz > gs_max else gs_max
-            self.perfil = float(self.solute_range_max * 100 * scale / (gs_max - 1))
-            self.gridbox_margin = float(
-                ((gs_max - 1) * self.grid_spacing - self.solute_range_max) / 2.0
+
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
             )
+
         elif scale != 0 and (not gridbox_size == 0):
-            # Scale and gridbox_size are provided, calculate perfil and gridbox_margin
+            # redundant branch in original; keep behavior identical
             self.scale = scale
             self.grid_spacing = 1.0 / self.scale
             self._gridbox_size = gridbox_size
-            gs_max = self._gridbox_size.nx  # Start with nx, then compare with ny, nz
-            gs_max = self._gridbox_size.ny if self._gridbox_size.ny > gs_max else gs_max
-            gs_max = self._gridbox_size.nz if self._gridbox_size.nz > gs_max else gs_max
-            self.perfil = float(self.solute_range_max * 100 * scale / (gs_max - 1))
-            self.gridbox_margin = float(
-                ((gs_max - 1) * self.grid_spacing - self.solute_range_max) / 2.0
+
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
             )
+
         elif perfil != 0 and (not gridbox_size == 0):
-            # Perfil and gridbox_size are provided, calculate scale and gridbox_margin
+            # perfil and gridbox_size provided -> compute scale from effective length target
             self.perfil = perfil
             self._gridbox_size = gridbox_size
-            gs_max = self._gridbox_size.nx  # Start with nx, then compare with ny, nz
+
+            # Use max dimension (as before) but account for offset shrinking effective length.
+            # For cubic-like semantics, match old gs_max logic.
+            gs_max = self._gridbox_size.nx
             gs_max = self._gridbox_size.ny if self._gridbox_size.ny > gs_max else gs_max
             gs_max = self._gridbox_size.nz if self._gridbox_size.nz > gs_max else gs_max
-            self.scale = float((gs_max - 1) * perfil / (self.solute_range_max * 100))
+
+            # We don't know scale yet; solve scale from:
+            #   L_eff = (gs_max - 1)/scale - 2*delta_max, where delta_max = |offset|/scale
+            # => L_eff = ((gs_max - 1) - 2*|offset|max) / scale
+            # target L_eff = solute_range_max * 100 / perfil
+            go_abs_max = float(np.max(np.abs(go)))
+            denom = float(gs_max - 1) - 2.0 * go_abs_max
+            if denom <= 0:
+                raise ValueError(
+                    "grid_offset too large for provided gridbox_size (no positive effective length)."
+                )
+
+            L_eff_target = float(self.solute_range_max) * 100.0 / float(perfil)
+            self.scale = float(denom / L_eff_target)
             self.grid_spacing = 1.0 / self.scale
-            self.gridbox_margin = float(
-                ((gs_max - 1) * self.grid_spacing - self.solute_range_max) / 2.0
+
+            # Now report effective metrics based on the final box and scale
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
             )
+
         elif scale != 0 and gridbox_margin != 0:
-            # Scale and gridbox_margin are provided, calculate gridbox_size and perfil
+            # scale and requested margin -> INFLATE size so tight-side margin ~= requested
             self.scale = scale
             self.grid_spacing = 1.0 / self.scale
-            self.gridbox_margin = gridbox_margin
+
+            # offset reduction in Å per axis
+            delta = np.abs(go) * float(self.grid_spacing)
+            delta_max = float(np.max(delta))
+
             if gridbox_type.value == GridBoxType.CUBOIDAL.value:
-                # Cuboidal gridbox: size is determined by solute range and margin for each dimension
-                gs_nx = int((self.solute_range[0] + 2 * gridbox_margin) * scale + 1)
-                gs_ny = int((self.solute_range[1] + 2 * gridbox_margin) * scale + 1)
-                gs_nz = int((self.solute_range[2] + 2 * gridbox_margin) * scale + 1)
-                # Ensure grid dimensions are odd
-                if gs_nx % 2 == 0:
-                    gs_nx += 1
-                if gs_ny % 2 == 0:
-                    gs_ny += 1
-                if gs_nz % 2 == 0:
-                    gs_nz += 1
-                gs_max = gs_nx  # Start with nx, then compare with ny, nz to find max dimension
-                gs_max = gs_ny if gs_ny > gs_max else gs_max
-                gs_max = gs_nz if gs_nz > gs_max else gs_max
+                mx = float(gridbox_margin) + float(delta[0])
+                my = float(gridbox_margin) + float(delta[1])
+                mz = float(gridbox_margin) + float(delta[2])
+
+                gs_nx = _make_odd(
+                    int((float(self.solute_range[0]) + 2.0 * mx) * self.scale + 1)
+                )
+                gs_ny = _make_odd(
+                    int((float(self.solute_range[1]) + 2.0 * my) * self.scale + 1)
+                )
+                gs_nz = _make_odd(
+                    int((float(self.solute_range[2]) + 2.0 * mz) * self.scale + 1)
+                )
+
                 self._gridbox_size = GridboxSize(gs_nx, gs_ny, gs_nz)
-                self.perfil = float(self.solute_range_max * 100 * scale / (gs_max - 1))
-            else:  # DelphiGridBoxType.CUBIC.value:
-                # Cubic gridbox: size is determined by maximum solute range and margin
-                gs_nlargest = int(
-                    (self.solute_range_max + 2 * gridbox_margin) * scale + 1
+            else:
+                margin_used = float(gridbox_margin) + delta_max
+                gs_nlargest = _make_odd(
+                    int(
+                        (float(self.solute_range_max) + 2.0 * margin_used) * self.scale
+                        + 1
+                    )
                 )
-                # Ensure grid dimension is odd
-                if gs_nlargest % 2 == 0:
-                    gs_nlargest += 1
                 self._gridbox_size = GridboxSize(gs_nlargest, gs_nlargest, gs_nlargest)
-                self.perfil = float(
-                    self.solute_range_max * 100 * scale / (gs_nlargest - 1)
-                )
+
+            # Store effective metrics (tight-side) after sizing
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
+            )
+
         elif scale != 0 and perfil != 0 and gridbox_margin == 0:
-            # Scale and perfil are provided, calculate gridbox_size and gridbox_margin
+            # scale and requested perfil -> INFLATE size so effective perfil ~= requested
             self.scale = scale
             self.grid_spacing = 1.0 / self.scale
-            self.perfil = perfil
+
+            delta = np.abs(go) * float(self.grid_spacing)
+            delta_max = float(np.max(delta))
+
             if gridbox_type.value == GridBoxType.CUBOIDAL.value:
-                # Cuboidal gridbox: size determined by solute range and perfil for each dimension
-                gs_nx = int((scale * 100 / perfil) * self.solute_range[0])
-                gs_ny = int((scale * 100 / perfil) * self.solute_range[1])
-                gs_nz = int((scale * 100 / perfil) * self.solute_range[2])
-                # Ensure grid dimensions are odd
-                if gs_nx % 2 == 0:
-                    gs_nx += 1
-                if gs_ny % 2 == 0:
-                    gs_ny += 1
-                if gs_nz % 2 == 0:
-                    gs_nz += 1
-                gs_max = gs_nx  # Start with nx, then compare with ny, nz to find max dimension
-                gs_max = gs_ny if gs_ny > gs_max else gs_max
-                gs_max = gs_nz if gs_nz > gs_max else gs_max
+                # Per-axis: target effective length per axis based on that axis solute_range
+                # L_eff_target_i = solute_range[i] * 100 / perfil
+                # L_target_i = L_eff_target_i + 2*delta[i]
+                Lx_target = float(self.solute_range[0]) * 100.0 / float(
+                    perfil
+                ) + 2.0 * float(delta[0])
+                Ly_target = float(self.solute_range[1]) * 100.0 / float(
+                    perfil
+                ) + 2.0 * float(delta[1])
+                Lz_target = float(self.solute_range[2]) * 100.0 / float(
+                    perfil
+                ) + 2.0 * float(delta[2])
+
+                gs_nx = _make_odd(int(Lx_target * self.scale + 1))
+                gs_ny = _make_odd(int(Ly_target * self.scale + 1))
+                gs_nz = _make_odd(int(Lz_target * self.scale + 1))
+
                 self._gridbox_size = GridboxSize(gs_nx, gs_ny, gs_nz)
-                self.gridbox_margin = float(
-                    ((gs_max - 1) * self.grid_spacing - self.solute_range_max) / 2.0
-                )
-            else:  # DelphiGridBoxType.CUBIC.value:
-                # Cubic gridbox: size determined by maximum solute range and perfil
-                gs_nlargest = int((scale * 100 / perfil) * self.solute_range_max)
-                # Ensure grid dimension is odd
-                if gs_nlargest % 2 == 0:
-                    gs_nlargest += 1
+            else:
+                # Cubic: base on solute_range_max
+                L_eff_target = float(self.solute_range_max) * 100.0 / float(perfil)
+                L_target = L_eff_target + 2.0 * delta_max
+                gs_nlargest = _make_odd(int(L_target * self.scale + 1))
                 self._gridbox_size = GridboxSize(gs_nlargest, gs_nlargest, gs_nlargest)
-                self.gridbox_margin = float(
-                    ((gs_nlargest - 1) * self.grid_spacing - self.solute_range_max)
-                    / 2.0
+
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
+            )
+
+        else:
+            # Fallback: preserve original behavior for any unhandled combination
+            if scale != 0:
+                self.scale = scale
+                self.grid_spacing = 1.0 / self.scale
+            elif perfil != 0:
+                self.perfil = perfil
+            if gridbox_size != 0:
+                self._gridbox_size = gridbox_size
+            else:
+                # minimal default: cubic based on solute_range_max and no margin
+                self.scale = self.scale if getattr(self, "scale", 0.0) != 0 else 1.0
+                self.grid_spacing = 1.0 / self.scale
+                gs_nlargest = _make_odd(
+                    int(float(self.solute_range_max) * self.scale + 1)
                 )
+                self._gridbox_size = GridboxSize(gs_nlargest, gs_nlargest, gs_nlargest)
+
+            _set_effective_metrics_from_box(
+                self._gridbox_size.nx, self._gridbox_size.ny, self._gridbox_size.nz
+            )
+
         # Print warnings if any and verbosity is higher than mandatory
         for warning in warnings:
             vprint(WARNING, _VERBOSITY, warning)
@@ -1140,6 +1547,7 @@ class RuntimeContext:
         self.grid_shape[0] = self._gridbox_size.nx
         self.grid_shape[1] = self._gridbox_size.ny
         self.grid_shape[2] = self._gridbox_size.nz
+
         return (self.scale, self.perfil, self.grid_shape)
 
     def setup_gridmap_3d(
@@ -1201,7 +1609,7 @@ class RuntimeContext:
 
         # Update context attributes with calculated grid parameters
         self.grid_spacing = grid_spacing
-        self.grid_origin = grid_origin
+        self.grid_origin[:] = grid_origin[:]
 
         return grid_origin
 

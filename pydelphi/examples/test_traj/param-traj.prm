@@ -1,0 +1,10 @@
+gridbox_type = cuboidal
+gridbox_margin = 25
+indi = 1
+exdi = 80
+bndcon = dipolar
+maxc = 0.0001
+
+energy(g,polar,c)
+in(topology,file="peptide.prmtop",format=prmtop)
+in(traj,file="peptide-nframes-10.nc",format=nc,first=0,last=10,stride=1)

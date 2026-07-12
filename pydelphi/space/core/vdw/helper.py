@@ -17,6 +17,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with pyDelPhi. If not, see <https://www.gnu.org/licenses/>.
 
+#
+# PyDelphi is free software: you can redistribute it and/or modify
+# (at your option) any later version.
+#
+# PyDelphi is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#
+
 
 """
 Core routines for molecular surface generation and boundary point refinement.
@@ -62,6 +71,8 @@ _VERBOSITY = get_effective_verbosity(_MODULE_NAME)
 from pydelphi.constants import ConstDelPhiFloats as ConstDelPhi
 from pydelphi.constants import ConstDelPhiInts as ConstDelPhiInts
 from pydelphi.constants import (
+    NON_SOLUTE_BOUNDARY,
+    SOLUTE_BOUNDARY_EXTERNAL,
     NEIGHBOR_VOXEL_RELATIVE_COORDINATES as NEIGHBOR_VOXEL_REL_COORDS,
 )
 
@@ -318,7 +329,8 @@ def surface_elaborate_boundary_gridpoints(
     grid_shape,
     boundary_grid_points,
     boundary_grid_indices,
-    dielectric_boundary_midpoints_1d,
+    boundary_grid_flagged_indices,
+    # solute_bgp_type_1d,
     index_discrete_epsilon_map_1d,
     index_map,
 ):
@@ -335,7 +347,7 @@ def surface_elaborate_boundary_gridpoints(
         grid_shape (tuple): The shape of the grid (x, y, z).
         boundary_grid_points (numpy.ndarray): Array to store boundary grid point coordinates.
         boundary_grid_indices (numpy.ndarray): Array of boundary grid indices.
-        dielectric_boundary_midpoints_1d (numpy.ndarray): 1D array representing the dielectric boundary.
+        solute_bgp_type_1d (numpy.ndarray): 1D array representing the dielectric boundary.
         index_discrete_epsilon_map_1d (numpy.ndarray): 1D array representing the discrete epsilon map.
         index_map (numpy.ndarray): Array of neighbor offsets used for grid navigation.
 
@@ -366,11 +378,11 @@ def surface_elaborate_boundary_gridpoints(
     x_stride = grid_shape[1] * y_stride
 
     # bgp: boundary_grid_point.
-    # NOTE: boundary_grid_indices array stores values with starting index 0.
+    # NOTE: boundary_grid_indices_1d array stores values with starting index 0.
     smallest_non_box_boundary_index = np.ones(3, dtype=delphi_int)
     larget_non_box_boundary_index = (grid_shape - 2).astype(delphi_int)
-    for this_bgp_index in range(1, num_boundary_grid_indices + 1):
-        grid_index_xyz = boundary_grid_indices[this_bgp_index - 1]
+    for this_bgp_index in range(num_boundary_grid_indices):
+        grid_index_xyz = boundary_grid_indices[this_bgp_index]
         # Skip this dielectric boundary grid point (bgp) if it is a gridbox boundary point,
         # as bgp must have all 6 neighbors defined for induced surface charge calculation.
         if or_lt_vector(
@@ -382,11 +394,15 @@ def surface_elaborate_boundary_gridpoints(
         grid_z_index = grid_index_xyz[2]
         grid_index_1d = grid_x_index * x_stride + grid_y_index * y_stride + grid_z_index
         grid_index_1d_x_3 = grid_index_1d * 3
-        if dielectric_boundary_midpoints_1d[grid_index_1d_x_3 + 1] != 0:
+        # if solute_bgp_type_1d[grid_index_1d_x_3 + 1] != 0:
+        if (
+            boundary_grid_flagged_indices[this_bgp_index][3] & SOLUTE_BOUNDARY_EXTERNAL
+            == SOLUTE_BOUNDARY_EXTERNAL
+        ):
             boundary_grid_point_count += 1
-            dielectric_boundary_midpoints_1d[grid_index_1d_x_3 + 1] = (
-                boundary_grid_point_count
-            )
+            # solute_bgp_type_1d[grid_index_1d_x_3 + 1] = (
+            #     boundary_grid_point_count
+            # )
 
             # Precaution not to exceed array size
             if boundary_grid_point_count <= max_boundary_grid_points:
@@ -460,21 +476,24 @@ def surface_elaborate_boundary_gridpoints(
     return num_boundary_grid_points, boundary_grid_points
 
 
-def print_4d_array(data_name, data_array, array_shape):
+def print_3d_array(data_name, data_array, array_shape):
     print(f"list of {len(data_array)} {data_name}: ", end="")
     print(
         "[",
     )
     ic = 0
-    y_stride_x_3 = array_shape[2] * 3
-    x_stride_x_3 = array_shape[1] * array_shape[2] * 3
-    for ijk1d_x_3 in range(0, len(data_array), 3):
-        iix = ijk1d_x_3 // x_stride_x_3
-        iiy = (ijk1d_x_3 - iix * x_stride_x_3) // y_stride_x_3
-        iiz = ((ijk1d_x_3 - iix * x_stride_x_3) - iiy * y_stride_x_3) // 3
-        if data_array[ijk1d_x_3 + 1] != 0:
+    y_stride = array_shape[2]
+    x_stride = array_shape[1] * array_shape[2]
+    for ijk1d in range(0, len(data_array)):
+        iix = ijk1d // x_stride
+        iiy = (ijk1d - iix * x_stride) // y_stride
+        iiz = ((ijk1d - iix * x_stride) - iiy * y_stride) // 3
+        if data_array[ijk1d] != 0:
+            is_external = (
+                data_array[ijk1d] & SOLUTE_BOUNDARY_EXTERNAL == SOLUTE_BOUNDARY_EXTERNAL
+            )
             print(
-                f"({ijk1d_x_3}, {iix}, {iiy}, {iiz}, {data_array[ijk1d_x_3 + 1]}, {data_array[ijk1d_x_3 + 2]}), ",
+                f"({ijk1d}, {iix}, {iiy}, {iiz}, {is_external}), ",
                 end="",
             )
             if ic % 4 == 0:

@@ -1,0 +1,39 @@
+biomodel = PBE    
+solver = SOR ! NWT ! SOR
+dielectricmodel = gaussian ! twodielectric ! gaussian
+surfacemethod=gaussiancutoff ! gaussiancutoff ! gaussiancutoff ! gaussian
+! surfaceoffset=0.0
+density_cutoff=0.759
+! surface_cutoff=20
+gaussianmultiplier=2
+surface_density_exponent=4
+sigma=1.0
+
+scale=2.0
+! percentfill=60
+! gridbox_margin=15.0
+grid_size=101
+! gridbox_type= CUBOIDAL ! CUBIC ! CUBOIDAL
+solute_extrema=COORDINATE
+
+in(modpdb4,file="./arg.pqr", format="pqr")                                                                
+! in(vdw,file="./amber99sb_sig-eps-gamma.vdw")                                                                
+
+indi=1.0
+exdi=80.0
+gapdi=22
+boundary_condition=dipolar
+
+salt=0.0
+max_rmsd=1.0e-6
+max_delta_phi=1.0e-5
+
+! nonlinit=500
+
+! zeta_potential=ON
+! zeta_distance=3
+! out(zphi,file="./arg_surface-3A.zeta")
+
+!energy(polar, c, g)
+energy(s, c, g)
+
