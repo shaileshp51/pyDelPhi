@@ -1,11 +1,11 @@
-name: pydelphi
+name: py313_pydelphi030
+
 channels:
   - conda-forge
+  - nodefaults
+
 dependencies:
   - python>=3.13,<3.14
   - numpy>=2.3.5,<2.4
   - numba>=0.62.1,<0.63
-  # Installing numba-cuda does not require a GPU to be present. CPU mode must
-  # still work when CUDA is unavailable or disabled at runtime.
-  - numba-cuda>=0.30,<0.31
   - pip

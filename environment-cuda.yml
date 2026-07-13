@@ -1,0 +1,16 @@
+name: py313_pydelphi030_cuda
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - python>=3.13,<3.14
+  - numpy>=2.3.5,<2.4
+  - numba>=0.62.1,<0.63
+  - numba-cuda>=0.30,<0.31
+
+  # Keep CUDA on the 12.x toolchain family for Pascal/P100 compatibility.
+  - cuda-version=12
+
+  - pip

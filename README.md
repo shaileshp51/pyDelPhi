@@ -21,7 +21,7 @@
 - **High-Performance Backends**
   
   - CPU parallelization via `Numba` and `prange`.
-  - GPU acceleration through custom CUDA kernels optimized for A100-class devices.
+  - GPU acceleration through custom CUDA kernels optimized.
 
 - **Model Support**
   
@@ -65,40 +65,101 @@ psutil
 
 ## 🧩 Recommended Environment Setup
 
-A dedicated Conda or Miniconda environment is **strongly recommended**. The source distribution includes two environment definitions:
+A dedicated Conda or Miniconda environment is **strongly recommended**. The source distribution includes four environment definitions so CPU, CUDA, and NetCDF support can be installed independently.
 
-- `environment.yml` — base pyDelPhi environment for static calculations and non-NetCDF trajectory formats.
-- `environment-traj.yml` — trajectory environment with the tested Conda-managed `netCDF4=1.7.3` package.
+| Environment file            | Conda environment name        | Intended use                                                       |
+| --------------------------- | ----------------------------- | ------------------------------------------------------------------ |
+| `environment.yml`           | `py313_pydelphi030`           | CPU-only static calculations and non-NetCDF trajectory formats     |
+| `environment-traj.yml`      | `py313_pydelphi030_traj`      | CPU execution with the tested NetCDF trajectory stack              |
+| `environment-cuda.yml`      | `py313_pydelphi030_cuda`      | CUDA-enabled static calculations and non-NetCDF trajectory formats |
+| `environment-traj-cuda.yml` | `py313_pydelphi030_traj_cuda` | CUDA-enabled execution with the tested NetCDF trajectory stack     |
 
-Both environments include `numba-cuda`. This does not require a GPU to be present and does not make CUDA mandatory at runtime. Select `-P cpu` for CPU execution; select `-P cuda` only on a system with a compatible NVIDIA GPU and driver.
+All four files use only `conda-forge` and explicitly disable the default channels through `nodefaults`.
 
-### Base Environment
+The CUDA environments install:
 
-Use this environment for static calculations and trajectory formats that do not require NetCDF:
-
-```bash
-conda env create -f environment.yml
-conda activate pydelphi
-python -m pip install . --no-deps
+```text
+numba-cuda >=0.30,<0.31
+cuda-version =12
 ```
 
-### Trajectory/NetCDF Environment
+Pinning `cuda-version=12` preserves compatibility with supported pre-Turing devices such as NVIDIA P100 GPUs. The system must still provide a compatible NVIDIA driver.
 
-Use this environment when NetCDF trajectory input is required:
-
-```bash
-conda env create -f environment-traj.yml
-conda activate pydelphi-traj
-python -m pip install . --no-deps
-```
-
-The trajectory environment extends the base dependency stack with:
+The trajectory environments additionally install the tested:
 
 ```text
 netCDF4=1.7.3
 ```
 
-Conda resolves the matching NetCDF-C, HDF5, and supporting native libraries. Other supported trajectory formats can also be used in this environment.
+Conda resolves the matching NetCDF-C, HDF5, and supporting native libraries.
+
+### CPU Environment
+
+Use this lean environment for CPU-only static calculations and trajectory formats that do not require NetCDF:
+
+```bash
+conda env create -f environment.yml
+conda activate py313_pydelphi030
+python -m pip install . --no-deps
+```
+
+Recommended installation verification:
+
+```bash
+pydelphi-test --no-cuda
+```
+
+### CPU Trajectory/NetCDF Environment
+
+Use this environment for CPU execution with NetCDF trajectory input:
+
+```bash
+conda env create -f environment-traj.yml
+conda activate py313_pydelphi030_traj
+python -m pip install . --no-deps
+```
+
+Recommended installation verification:
+
+```bash
+pydelphi-test-traj --no-cuda
+```
+
+### CUDA Environment
+
+Use this environment for CUDA-enabled static calculations and non-NetCDF trajectory formats:
+
+```bash
+conda env create -f environment-cuda.yml
+conda activate py313_pydelphi030_cuda
+python -m pip install . --no-deps
+```
+
+Recommended installation verification:
+
+```bash
+pydelphi-test
+```
+
+Do not add `--no-cuda` when the purpose is to verify CUDA usability.
+
+### CUDA Trajectory/NetCDF Environment
+
+Use this environment for CUDA-enabled execution with NetCDF trajectory input:
+
+```bash
+conda env create -f environment-traj-cuda.yml
+conda activate py313_pydelphi030_traj_cuda
+python -m pip install . --no-deps
+```
+
+Recommended installation verification:
+
+```bash
+pydelphi-test-traj
+```
+
+`pydelphi-static` and `pydelphi-trajectory` perform a lightweight CUDA candidate check during startup and a full device/kernel usability test only when CUDA is requested. If no usable CUDA device is found, CPU execution remains available. The regression commands do not automatically remove CUDA configurations; CPU-only environments must therefore use `--no-cuda`.
 
 ### From a Git Checkout
 
@@ -106,18 +167,26 @@ Conda resolves the matching NetCDF-C, HDF5, and supporting native libraries. Oth
 git clone https://github.com/delphi001/pyDelPhi.git
 cd pyDelPhi
 conda env create -f environment.yml
-conda activate pydelphi
+conda activate py313_pydelphi030
 python -m pip install . --no-deps
 ```
 
-For trajectory/NetCDF development, create `environment-traj.yml` instead and activate `pydelphi-traj`.
+Choose one of the other three environment files when NetCDF and/or CUDA support is required.
 
-Use editable installation (`-e`) only for development. For an unpacked source distribution, use the normal non-editable installation shown above.
+Use editable installation only for development:
 
-Verify installation:
+```bash
+python -m pip install -e . --no-deps
+```
+
+For an unpacked source distribution or release checkout, use the normal non-editable installation shown above.
+
+Verify the installed commands:
 
 ```bash
 pydelphi-static --version
+pydelphi-trajectory --version
+pydelphi-help --list-groups
 ```
 
 ---
@@ -183,7 +252,7 @@ pydelphi-static -f examples/5tif/param_5tif_linear_trad.prm -P cpu -p double -t 
 Run PB calculations over frames from a molecular trajectory:
 
 ```bash
-pydelphi-trajectory -f trajectory_params.inp -P cpu -p double -t 4 -O
+pydelphi-trajectory -f trajectory_params.prm -P cpu -p double -t 4 -O
 ```
 
 **Usage**
@@ -300,7 +369,7 @@ usage: pydelphi-help [-h] [-g GROUP] [-n PARAM_NAME] [-ln] [-lg]
 Help topics use the following convention:
 
 - `name` for a statement-style parameter, such as `grid_size`.
-- `function` for a selector-free function, such as `zeta` for `zeta(...)`.
+- `function` for a selector-free function, such as `select` for `select(...)`.
 - `function__namedattr` for a function-style construct, such as `in__crgsiz` for `in(crgsiz, ...)`.
 
 Examples:
@@ -311,6 +380,10 @@ pydelphi-help -n in__crgsiz
 pydelphi-help -g infile
 pydelphi-help --list-param-names
 pydelphi-help --list-groups
+```
+
+```
+pydelphi-help -n surface_method
 ```
 
 **Sample Output**
@@ -352,11 +425,11 @@ from pydelphi.foundation.enums import Precision
 
 # --- Configure platform and precision ---
 platform = Platform("cuda", debug=False)
-platform.activate("cuda", threads=64, device_id=0)
+platform.activate("cuda", threads=8, device_id=0)
 platform.set_precision(Precision.DOUBLE)
 
 # --- Initialize and run DelphiApp ---
-app = DelphiApp(param_file="examples/1CRN_params.inp", platform=platform)
+app = DelphiApp(param_file="examples/5tif/param_5tif_linear_trad.prm", platform=platform)
 energies = app.run(outfile="outputs.csv", label="1CRN", overwrite=True)
 
 print(f"Reaction Field Energy (kT): {energies['E_rxn_kT_tot']:.6f}")
@@ -493,14 +566,23 @@ Each component is self-contained and unit-tested, ensuring that scientific accur
 
 ### 🔹 Recommended Development Workflow
 
-1. **Run validation suite locally:**
+1. **Run validation suites locally:**
+   
+   For CPU-only environments:
    
    ```bash
-   pydelphi-test --no-cuda
-   pydelphi-test-traj --no-cuda
+   pydelphi-test --no-cuda --no-single --no-parallel
+   pydelphi-test-traj --no-cuda --no-single --no-parallel
    ```
    
-   (use `--no-double` or `--no-single` to isolate precision tests)
+   For CUDA environments:
+   
+   ```bash
+   pydelphi-test --no-single --no-parallel
+   pydelphi-test-traj --no-single --no-parallel
+   ```
+   
+   These reduced commands are intended for practical build and installation verification. Remove exclusion flags for broader precision, threading, and CUDA coverage.
 
 2. **Profile a new feature:**
    
