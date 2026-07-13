@@ -1,0 +1,12 @@
+gridbox_type = cuboidal
+gridbox_margin = 25
+indi = 1
+exdi = 80
+bndcon = dipolar
+maxc = 0.0001
+
+energy(g,p,c)
+
+in(crgsiz,set="amber-ff14sb-mbondi3-set",mode="acquire")
+in(pdb,file="peptide.pdb")
+
