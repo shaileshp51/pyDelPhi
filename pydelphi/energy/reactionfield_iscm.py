@@ -651,8 +651,60 @@ def _rf_energy_kernel_outer_atom(
     out_nthreads[tid] = acc * atom_q
 
 
+# def _rf_energy_gpu(
+#     induced_surf_charges_flat, induced_surf_charge_positions, atoms_data, epkt
+# ):
+#     """
+#     Computes the reaction field energy on GPU using CUDA.
+#     Dynamically chooses outer dimension based on sizes and chunks the computation
+#     to avoid GPU memory blowup for huge systems.
+#     """
+#     n_surf = induced_surf_charge_positions.shape[0]
+#     n_atoms = atoms_data.shape[0]
+#
+#     if n_surf == 0 or n_atoms == 0:
+#         return 0.0
+#
+#     # Choose kernel based on smaller dimension as inner loop
+#     if n_surf >= n_atoms:
+#         kernel = _rf_energy_kernel_outer_surf
+#         outer_size = n_surf
+#     else:
+#         kernel = _rf_energy_kernel_outer_atom
+#         outer_size = n_atoms
+#
+#     threads_per_block = 256
+#     max_blocks = 1024
+#     total_energy = 0.0
+#
+#     # Chunking loop to limit device memory usage
+#     for outer_start in range(0, outer_size, threads_per_block * max_blocks):
+#         n_active = min(threads_per_block * max_blocks, outer_size - outer_start)
+#         blocks = (n_active + threads_per_block - 1) // threads_per_block
+#
+#         out_nthreads_device = cuda.to_device(
+#             np.zeros(shape=(threads_per_block * blocks,), dtype=np.float64)
+#         )
+#         kernel[int(blocks), int(threads_per_block)](
+#             induced_surf_charges_flat,
+#             induced_surf_charge_positions,
+#             atoms_data,
+#             outer_start,
+#             n_active,
+#             out_nthreads_device,
+#         )
+#         cuda.synchronize()
+#         partial_host = out_nthreads_device.copy_to_host()
+#         total_energy += np.sum(partial_host[:n_active])
+#
+#     return total_energy * epkt * 0.5
+
+
 def _rf_energy_gpu(
-    induced_surf_charges_flat, induced_surf_charge_positions, atoms_data, epkt
+    induced_surf_charges_flat,
+    induced_surf_charge_positions,
+    atoms_data,
+    epkt,
 ):
     """
     Computes the reaction field energy on GPU using CUDA.
@@ -665,7 +717,7 @@ def _rf_energy_gpu(
     if n_surf == 0 or n_atoms == 0:
         return 0.0
 
-    # Choose kernel based on smaller dimension as inner loop
+    # Choose kernel based on smaller dimension as inner loop.
     if n_surf >= n_atoms:
         kernel = _rf_energy_kernel_outer_surf
         outer_size = n_surf
@@ -677,27 +729,65 @@ def _rf_energy_gpu(
     max_blocks = 1024
     total_energy = 0.0
 
-    # Chunking loop to limit device memory usage
-    for outer_start in range(0, outer_size, threads_per_block * max_blocks):
-        n_active = min(threads_per_block * max_blocks, outer_size - outer_start)
-        blocks = (n_active + threads_per_block - 1) // threads_per_block
+    d_induced_surf_charges_flat = None
+    d_induced_surf_charge_positions = None
+    d_atoms_data = None
+    out_nthreads_device = None
 
-        out_nthreads_device = cuda.to_device(
-            np.zeros(shape=(threads_per_block * blocks,), dtype=np.float64)
-        )
-        kernel[int(blocks), int(threads_per_block)](
-            induced_surf_charges_flat,
-            induced_surf_charge_positions,
-            atoms_data,
-            outer_start,
-            n_active,
-            out_nthreads_device,
-        )
-        cuda.synchronize()
-        partial_host = out_nthreads_device.copy_to_host()
-        total_energy += np.sum(partial_host[:n_active])
+    try:
+        # Explicitly transfer read-only kernel inputs once and reuse them
+        # across all chunks.
+        d_induced_surf_charges_flat = cuda.to_device(induced_surf_charges_flat)
+        d_induced_surf_charge_positions = cuda.to_device(induced_surf_charge_positions)
+        d_atoms_data = cuda.to_device(atoms_data)
 
-    return total_energy * epkt * 0.5
+        # Chunking loop to limit device memory usage.
+        for outer_start in range(
+            0,
+            outer_size,
+            threads_per_block * max_blocks,
+        ):
+            n_active = min(
+                threads_per_block * max_blocks,
+                outer_size - outer_start,
+            )
+            blocks = (n_active + threads_per_block - 1) // threads_per_block
+
+            # Retain explicit zero initialization by design.
+            out_nthreads_device = cuda.to_device(
+                np.zeros(
+                    shape=(threads_per_block * blocks,),
+                    dtype=np.float64,
+                )
+            )
+
+            kernel[
+                int(blocks),
+                int(threads_per_block),
+            ](
+                d_induced_surf_charges_flat,
+                d_induced_surf_charge_positions,
+                d_atoms_data,
+                outer_start,
+                n_active,
+                out_nthreads_device,
+            )
+            cuda.synchronize()
+
+            partial_host = out_nthreads_device.copy_to_host()
+            total_energy += np.sum(partial_host[:n_active])
+
+            # Release this chunk's output reference before allocating the next.
+            out_nthreads_device = None
+
+        return total_energy * epkt * 0.5
+
+    finally:
+        # All kernel work is synchronized inside the chunking loop.
+        out_nthreads_device = None
+        d_induced_surf_charges_flat = None
+        d_induced_surf_charge_positions = None
+        d_atoms_data = None
 
 
 def calc_induced_charge_rf_energy(

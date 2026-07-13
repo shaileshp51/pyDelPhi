@@ -158,6 +158,25 @@ def print_pydelphi_version_info():
     print(f"-----------------------------\n")
 
 
+def _configure_cuda_warnings(*, show_low_occupancy: bool = False) -> None:
+    if show_low_occupancy:
+        return
+
+    try:
+        from numba.cuda.core.errors import NumbaPerformanceWarning
+    except ImportError:
+        return
+
+    warnings.filterwarnings(
+        "ignore",
+        message=(
+            r"Grid size \d+ will likely result in GPU "
+            r"under-utilization due to low occupancy\."
+        ),
+        category=NumbaPerformanceWarning,
+    )
+
+
 def main():
     tic = time.perf_counter()
     from pydelphi.config.global_runtime import (
@@ -184,6 +203,10 @@ def main():
 
     # Before starting the calculation or opening the file
     check_output_file(args.outfile, args.overwrite)
+    _configure_cuda_warnings(
+        show_low_occupancy=str_to_verbosity(args.verbosity).int_value
+        <= VerbosityLevel.DEBUG.int_value
+    )
 
     # Configure platform & precision
     platform = Platform(platform_name=args.platform, debug=False)
