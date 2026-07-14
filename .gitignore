@@ -43,6 +43,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Skip release files
+.release-local/
+
 # ---- Bytecode & compiled ----
 __pycache__/
 *.py[cod]
