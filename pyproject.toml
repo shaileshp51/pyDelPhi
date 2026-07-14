@@ -23,6 +23,8 @@ include = [
     "CONTRIBUTING.md",
     { path = "environment.yml", format = ["sdist"] },
     { path = "environment-traj.yml", format = ["sdist"] },
+    { path = "environment-cuda.yml", format = ["sdist"] },
+    { path = "environment-traj-cuda.yml", format = ["sdist"] },
     "pydelphi/data/**/*.tsv",
     "pydelphi/data/**/*.prm",
     "pydelphi/data/**/*.pqr",
